@@ -1,0 +1,22 @@
+# Garage v2 single-node configuration
+# Reference: https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/
+#
+# Generate rpc_secret with: openssl rand -hex 32
+# Generate admin_token with: openssl rand -base64 32
+
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "sqlite"
+replication_factor = 1
+
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "127.0.0.1:3901"
+rpc_secret = "GENERATE_WITH_openssl_rand_hex_32_replace_this_before_deploy"
+
+[s3_api]
+s3_region = "garage"
+api_bind_addr = "[::]:3900"
+
+[admin]
+api_bind_addr = "[::]:3903"
+admin_token = "GENERATE_WITH_openssl_rand_base64_32_replace_this_before_deploy"

@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+.next
+dist
+.turbo
+.git
+.env
+.env.local
+.env.*.local
+*.log
+garage/data
+garage/meta
+traefik/acme.json
