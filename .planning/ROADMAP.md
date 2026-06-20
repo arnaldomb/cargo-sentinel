@@ -37,10 +37,10 @@ then async reports (Phase 6), and finally the Super Admin panel and production d
   5. `createTenantClient(prisma, empresaId)` is exported from packages/database and callable in a unit test
 **Plans**: 4 plans
 Plans:
-- [ ] 01-01-PLAN.md — Turborepo + pnpm monorepo scaffold (5 workspaces, pnpm build green) [INFRA-01]
-- [ ] 01-02-PLAN.md — Prisma schema + createTenantClient + schema push to Postgres [INFRA-02]
-- [ ] 01-03-PLAN.md — Docker Compose (6 services) + Garage + Traefik routing + acme.json [INFRA-03, INFRA-04, INFRA-05, STORAGE-01]
-- [ ] 01-04-PLAN.md — LPR webhook + BullMQ async worker + Garage upload + presigned URLs [LPR-01..05, STORAGE-02, STORAGE-03]
+- [x] 01-01-PLAN.md — Turborepo + pnpm monorepo scaffold (5 workspaces, pnpm build green) [INFRA-01]
+- [x] 01-02-PLAN.md — Prisma schema + createTenantClient + schema push to Postgres [INFRA-02]
+- [x] 01-03-PLAN.md — Docker Compose (6 services) + Garage + Traefik routing + acme.json [INFRA-03, INFRA-04, INFRA-05, STORAGE-01]
+- [x] 01-04-PLAN.md — LPR webhook + BullMQ async worker + Garage upload + presigned URLs [LPR-01..05, STORAGE-02, STORAGE-03]
 
 ### Phase 2: Auth + Multi-Tenant Hierarchy
 **Goal**: Users can authenticate, and every API call is scoped to the correct tenant via the JWT-injected tenant client — with the full Empresa > Obra > Camera hierarchy manageable by the right role.
