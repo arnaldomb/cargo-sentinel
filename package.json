@@ -15,6 +15,9 @@
     "typescript": "^5.4.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@prisma/engines", "prisma", "esbuild", "sharp", "msgpackr-extract"]
+    "onlyBuiltDependencies": ["@prisma/engines", "prisma", "esbuild", "sharp", "msgpackr-extract"],
+    "overrides": {
+      "ioredis": "5.10.1"
+    }
   }
 }
