@@ -21,7 +21,7 @@ Não é só um receptor LPR — é inteligência operacional para prevenção de
 | Styling | Tailwind CSS | 3.x (stay on 3, not 4) | Tailwind 4 is breaking — Evolution API dashboard already migrated away; v3 is the stable target for 2025 production | HIGH |
 | Component icons | Lucide React | latest | Matches opencheck UI reference exactly | HIGH |
 | Backend API | Node.js + Express | Express 4.x | Separate process needed for LPR webhook ingestion; Next.js server actions cannot handle persistent WebSocket | HIGH |
-| ORM | Prisma | **6.x** | v6.9+ ships TypeScript/WASM query engine (1.6MB vs 14MB, 3.4x faster queries); full production-ready | HIGH |
+| ORM | Prisma | **7.x** (current stable as of 2026) | v7 is the current stable major; greenfield project starts on 7.x. Ships TypeScript/WASM query engine, 3.4x faster queries; `$extends` API unchanged from v6 | HIGH |
 | Database | PostgreSQL | 16+ | Row-level security, `set_config()` for tenant context, full Prisma support | HIGH |
 | Real-time | Socket.IO | 4.x + `@socket.io/redis-adapter` | Bidirectional required (server push + client ack); Redis adapter enables horizontal scaling | HIGH |
 | Image storage | **Garage** | 2.x (v2.3+ stable) | MinIO archived April 2026 (entered maintenance mode Dec 2025); Garage is the community default replacement, single Go binary, Apache-compatible, Docker-ready | HIGH |
@@ -32,7 +32,7 @@ Não é só um receptor LPR — é inteligência operacional para prevenção de
 | Cache / pub-sub | Redis | 7.x | Required by Socket.IO Redis adapter; also serves rate limiting and alert deduplication | HIGH |
 ## Key Decisions
 ### 1. Next.js 15, not 14
-### 2. Prisma v6 with tenantId middleware, NOT PostgreSQL RLS
+### 2. Prisma v7 with tenantId middleware, NOT PostgreSQL RLS
 - **PostgreSQL RLS policies** (database enforced via `current_setting()`) — maximum safety, complex setup, requires custom migration scripts, Prisma does not generate RLS DDL
 - **Application-layer tenantId middleware** (Prisma client extension filtering) — simpler, Prisma-native, sufficient isolation when Express middleware sets tenant context before every request
 ### 3. Garage instead of MinIO
@@ -69,7 +69,7 @@ Não é só um receptor LPR — é inteligência operacional para prevenção de
 | Package | Pin To | Reason |
 |---------|--------|--------|
 | `next` | `^15.0.0` | 15 is stable; avoid 14 |
-| `prisma` | `^6.9.0` | WASM query engine is production-ready from 6.9+; 3.4x faster |
+| `prisma` | `^7.8.0` | 7.x is current stable (as of 2026); greenfield project. WASM query engine, 3.4x faster; `$extends` API unchanged from v6 |
 | `socket.io` | `^4.7.0` | Last major stable; Redis adapter compatible |
 | `@socket.io/redis-adapter` | `^8.x` | Must match socket.io major version |
 | `next-auth` / `auth.js` | `^5.0.0` | v5 is the current stable (was beta for 2 years, now stable) |
@@ -77,7 +77,7 @@ Não é só um receptor LPR — é inteligência operacional para prevenção de
 | `garage` (Docker tag) | `v2.3.0` or latest `v2` | Avoid `latest` tag; pin to major |
 | `traefik` (Docker image) | `v3` | v3 is current stable; v2 is legacy |
 | `tailwindcss` | `^3.4.x` | Stay on v3; do not upgrade to v4 until shadcn/ui fully supports it |
-| `typescript` | `^5.4.x` | Required for Prisma v6 type inference |
+| `typescript` | `^5.4.x` | Required for Prisma v7 type inference |
 ## Sources
 - Next.js 15 production readiness: https://nextjs.org/blog/next-15
 - Prisma v6.9.0 WASM engine: https://www.prisma.io/blog/prisma-6-9-0-release

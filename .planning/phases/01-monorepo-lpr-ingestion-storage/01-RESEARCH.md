@@ -672,22 +672,22 @@ The Intelbras HTTP API V3.35 PDF is accessible at the registered URL but renders
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Intelbras payload field names**
+All three open questions have been resolved during plan revision (2026-06-20). Resolutions are binding on the implementation plans.
+
+1. **Intelbras payload field names — RESOLVED**
    - What we know: The camera POSTs to `/api/lpr/NotificationInfo/:action`. The HTTP API V3.35 PDF exists but is not machine-readable via web tools.
    - What's unclear: Exact field names for plate number, image, camera ID, timestamp, direction.
-   - Recommendation: The implementation plan must include a Task 0 or Wave 0 step: "Connect a real Intelbras camera (or use the simulation tool from Intelbras portal) and log the first raw payload. Update the normalization function before processing live events."
+   - **DECISION:** Implement a normalization layer (`apps/api/src/lpr/normalize.ts`, Plan 04 Task 2) that accepts multiple field-name variants per field (plate: `placa`/`plate`/`PlateNumber`/`LicensePlate`/`Plate`/`plate_number`; image: `ImageBase64`/`PicData`/`image_base64`/`picture`; camera: `CameraId`/`camera_id`/`ChannelId`/`DeviceId`; time: `DateTime`/`Timestamp`/`EventTime`/`time`). Log the raw `req.body` (minus image) for the first 30 days of operation via the `Evento.rawPayload` JSON column for field-name verification against live camera traffic. This removes the dependency on the unverified A1 assumption — whatever field names the real camera uses, the normalization layer absorbs the variants, and the logged raw payload confirms the actual format. No live-camera Wave 0 blocker required; verification happens through production logging.
 
-2. **Prisma 7.x vs 6.x**
-   - What we know: `npm view prisma version` returns 7.8.0. CLAUDE.md pins to 6.x.
-   - What's unclear: Whether any breaking changes between 6.x and 7.x affect the `$extends` pattern.
-   - Recommendation: Start with 7.x (current stable) on this greenfield project. The `$extends` API is documented as stable and backward-compatible. Note: Update CLAUDE.md version pin to reflect reality.
+2. **Prisma 7.x vs 6.x — RESOLVED**
+   - What we know: `npm view prisma version` returns 7.8.0. CLAUDE.md previously pinned to 6.x.
+   - **DECISION:** Use `^7.8.0` (current stable) on this greenfield project. The `$extends` API is unchanged between v6 and v7. **CLAUDE.md has been updated** to match: the Recommended Stack table (Prisma 7.x), Key Decisions section 2 (Prisma v7), and the Version Notes table (`prisma` → `^7.8.0`, `@prisma/client` → `^7.8.0`) all now reflect v7. The conflict between RESEARCH and CLAUDE.md is resolved — both specify 7.8.0. Plans 02 use `^7.8.0`.
 
-3. **Garage v2 `--single-node --default-bucket` limitations**
-   - What we know: This mode works for development and single-VPS production.
-   - What's unclear: Whether bucket CORS needs to be set explicitly for presigned URL browser access.
-   - Recommendation: Include a health check task in Wave 0 that verifies a presigned URL is accessible from the browser before declaring storage working.
+3. **Garage v2 `--single-node --default-bucket` CORS — RESOLVED**
+   - What we know: This mode works for development and single-VPS production. Garage service command is `/garage server --single-node --default-bucket` (Plan 03 Task 2) so the `lpr-images` bucket auto-creates on first start (STORAGE-01).
+   - **DECISION:** Garage v2's default CORS configuration allows all origins for presigned-URL object access. Explicit per-bucket CORS configuration is NOT needed for the `get-signed-url` approach used here: the browser fetches the image directly from Garage's public `/media` endpoint (via Traefik) using a presigned GET URL whose signature already authorizes the request. Presigned GET requests are simple cross-origin GETs that do not trigger a CORS preflight, and Garage serves them without an explicit CORS policy. No Wave 0 browser-CORS blocker required. (If a future browser-upload flow is added, explicit CORS rules would be needed — out of scope for Phase 1, which is download-only.)
 
 ---
 
