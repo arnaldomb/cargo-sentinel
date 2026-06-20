@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
@@ -10,7 +13,11 @@
     "db:push": "prisma db push"
   },
   "devDependencies": {
+    "prisma": "^7.8.0",
     "typescript": "^5.4.0",
     "vitest": "^4.1.9"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.8.0"
   }
 }

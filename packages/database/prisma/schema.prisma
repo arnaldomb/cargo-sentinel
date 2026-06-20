@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Direcao {
+  ENTRADA
+  SAIDA
+}
+
+enum Classificacao {
+  LIBERADO
+  VISITANTE
+  ATENCAO
+  SUSPEITO
+  CRITICO
+}
+
+enum EmpresaStatus {
+  ATIVO
+  SUSPENSO
+}
+
+model Empresa {
+  id        String        @id @default(cuid())
+  nome      String
+  cnpj      String        @unique
+  status    EmpresaStatus @default(ATIVO)
+  createdAt DateTime      @default(now())
+  obras     Obra[]
+  cameras   Camera[]
+  eventos   Evento[]
+}
+
+model Obra {
+  id        String   @id @default(cuid())
+  nome      String
+  endereco  String?
+  empresaId String
+  createdAt DateTime @default(now())
+  empresa   Empresa  @relation(fields: [empresaId], references: [id])
+  cameras   Camera[]
+  eventos   Evento[]
+
+  @@index([empresaId])
+}
+
+model Camera {
+  id        String   @id @default(cuid())
+  codigoLpr String   @unique
+  ip        String?
+  obraId    String
+  empresaId String
+  createdAt DateTime @default(now())
+  obra      Obra     @relation(fields: [obraId], references: [id])
+  empresa   Empresa  @relation(fields: [empresaId], references: [id])
+  eventos   Evento[]
+
+  @@index([empresaId])
+  @@index([obraId])
+}
+
+model Evento {
+  id             String        @id @default(cuid())
+  timestamp      DateTime      @default(now())
+  placaNumero    String
+  direcao        Direcao?
+  fotoGarageKey  String?
+  idempotencyKey String        @unique
+  cameraId       String
+  obraId         String
+  empresaId      String
+  classificacao  Classificacao @default(VISITANTE)
+  rawPayload     Json?
+  camera         Camera        @relation(fields: [cameraId], references: [id])
+  obra           Obra          @relation(fields: [obraId], references: [id])
+  empresa        Empresa       @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId, timestamp])
+  @@index([empresaId, placaNumero])
+  @@index([obraId, timestamp])
+  @@index([cameraId])
+}
