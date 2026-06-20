@@ -1,0 +1,10 @@
+node_modules
+dist
+.next
+.turbo
+*.log
+.env
+.env.local
+packages/database/src/generated
+garage/data
+garage/meta
