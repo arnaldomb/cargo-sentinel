@@ -47,14 +47,15 @@ Empresa (tenant)
 
 | Camada       | Tecnologia                          |
 |-------------|-------------------------------------|
-| Frontend    | Next.js 14 + TypeScript + Tailwind  |
-| Backend API | Node.js + Express + Socket.IO       |
-| Database    | PostgreSQL + Prisma ORM             |
-| Imagens     | MinIO (self-hosted, S3-compat)      |
-| Monorepo    | Turborepo + pnpm                    |
-| Deploy      | Docker Compose + Traefik            |
-| Alertas     | WebSocket (painel) + WhatsApp (Evolution API) |
-| Auth        | JWT + NextAuth.js                   |
+| Frontend    | Next.js 15 + TypeScript + Tailwind v3  |
+| Backend API | Node.js + Express + Socket.IO          |
+| Database    | PostgreSQL + Prisma v6.9+              |
+| Imagens     | Garage v2.x (S3-compat, OSS — MinIO arquivado abr/2026) |
+| Monorepo    | Turborepo 2.x + pnpm                   |
+| Deploy      | Docker Compose + Traefik v3            |
+| Alertas     | WebSocket (painel) + WhatsApp via Evolution API v2.3.7 (pinado) |
+| Auth        | Auth.js v5 (NextAuth) + JWT             |
+| Filas       | BullMQ + Redis (webhooks async, WhatsApp, relatórios) |
 
 ## Roles
 
