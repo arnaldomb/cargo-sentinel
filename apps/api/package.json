@@ -9,13 +9,22 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1073.0",
+    "@aws-sdk/s3-request-presigner": "^3.1073.0",
     "@cargo-sentinel/database": "workspace:*",
     "@cargo-sentinel/shared": "workspace:*",
-    "express": "^4.21.0"
+    "bullmq": "^5.79.0",
+    "express": "^4.21.0",
+    "ioredis": "^5.11.1",
+    "sharp": "^0.35.2",
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
+    "@types/supertest": "^7.2.0",
+    "@types/uuid": "^11.0.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.22.4",
     "typescript": "^5.4.0",
     "vitest": "^4.1.9"
