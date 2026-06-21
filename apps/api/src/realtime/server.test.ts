@@ -37,4 +37,53 @@ describe('realtime server helpers', () => {
     expect(to).toHaveBeenCalledWith('empresa:emp1');
     expect(emit).toHaveBeenCalledWith('feed:evento-novo', { id: 'evt1' });
   });
+
+  it('emite feed:evento-novo com empresaId correto via emitToEmpresa', () => {
+    const emit = vi.fn();
+    const to = vi.fn().mockReturnValue({ emit });
+
+    emitToEmpresa({ to }, 'emp-abc', 'feed:evento-novo', { id: 'evt42', placaNumero: 'XYZ9999' });
+
+    expect(to).toHaveBeenCalledWith('empresa:emp-abc');
+    expect(emit).toHaveBeenCalledWith('feed:evento-novo', { id: 'evt42', placaNumero: 'XYZ9999' });
+  });
+
+  it('emite feed:placa-classificada com empresaId correto via emitToEmpresa', () => {
+    const emit = vi.fn();
+    const to = vi.fn().mockReturnValue({ emit });
+
+    emitToEmpresa({ to }, 'emp-abc', 'feed:placa-classificada', {
+      placaId: 'pla1',
+      classificacao: 'SUSPEITO',
+    });
+
+    expect(to).toHaveBeenCalledWith('empresa:emp-abc');
+    expect(emit).toHaveBeenCalledWith('feed:placa-classificada', {
+      placaId: 'pla1',
+      classificacao: 'SUSPEITO',
+    });
+  });
+
+  it('emite feed:camera-status com empresaId correto via emitToEmpresa', () => {
+    const emit = vi.fn();
+    const to = vi.fn().mockReturnValue({ emit });
+
+    emitToEmpresa({ to }, 'emp-abc', 'feed:camera-status', {
+      id: 'cam1',
+      status: 'online',
+    });
+
+    expect(to).toHaveBeenCalledWith('empresa:emp-abc');
+    expect(emit).toHaveBeenCalledWith('feed:camera-status', { id: 'cam1', status: 'online' });
+  });
+
+  it('não emite para rooms de outros tenants', () => {
+    const emit = vi.fn();
+    const to = vi.fn().mockReturnValue({ emit });
+
+    emitToEmpresa({ to }, 'emp-1', 'feed:evento-novo', { id: 'evt1' });
+
+    expect(to).not.toHaveBeenCalledWith('empresa:emp-2');
+    expect(to).toHaveBeenCalledWith('empresa:emp-1');
+  });
 });
