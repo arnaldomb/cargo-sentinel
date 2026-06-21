@@ -84,7 +84,7 @@ export function CriticalConfirmDialog({
           <button
             ref={cancelRef}
             onClick={onCancel}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            className="rounded-lg border border-ggtech-lightblue bg-white px-4 py-2 text-sm font-medium text-ggtech-lightblue transition-colors hover:bg-ggtech-lightblue/10"
             data-testid="confirm-dialog-cancel"
           >
             Cancelar

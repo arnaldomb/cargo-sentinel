@@ -1,6 +1,6 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X, LayoutDashboard } from 'lucide-react';
 import type { CameraStatusItem } from '@/lib/dashboard';
 
 type SidebarProps = {
@@ -53,6 +53,17 @@ export function Sidebar({ cameras, userName, userRole, isOpen, onClose }: Sideba
             <X size={18} />
           </button>
         </div>
+
+        {/* Nav item: Dashboard (sempre ativo — single-page app) */}
+        <nav className="mb-4">
+          <span
+            className="flex items-center gap-2 rounded-lg bg-ggtech-blue px-3 py-2 text-sm font-semibold text-white"
+            aria-current="page"
+          >
+            <LayoutDashboard size={16} aria-hidden="true" />
+            Dashboard
+          </span>
+        </nav>
 
         {/* Lista de câmeras */}
         <div className="flex flex-col gap-3">
