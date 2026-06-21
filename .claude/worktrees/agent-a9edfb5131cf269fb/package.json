@@ -11,20 +11,7 @@
     "db:push": "turbo db:push"
   },
   "devDependencies": {
-    "playwright": "^1.61.0",
     "turbo": "^2.0.0",
     "typescript": "^5.4.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@prisma/engines",
-      "prisma",
-      "esbuild",
-      "sharp",
-      "msgpackr-extract"
-    ],
-    "overrides": {
-      "ioredis": "5.10.1"
-    }
   }
 }

@@ -653,22 +653,16 @@ export default async function DashboardPage() {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Auth.js v5 vs Better Auth — confirmar com o usuário**
-   - O que sabemos: CLAUDE.md lockeia Auth.js v5. Auth.js v5 está em beta e em modo manutenção de segurança desde set/2025. Better Auth v1.6.20 é estável e é agora a recomendação oficial do time Auth.js.
-   - O que está incerto: Se o usuário quer seguir o CLAUDE.md literalmente ou atualizar a decisão para Better Auth.
-   - Recomendação: O planner deve criar uma tarefa de Wave 0 que pergunta ao usuário antes de instalar qualquer biblioteca de auth.
+   - RESOLVED: Manter Auth.js v5 (next-auth@beta) conforme CLAUDE.md. Usuário confirmou explicitamente antes do planejamento.
 
 2. **Refresh token real (AUTH-04) vs sessão JWT longa**
-   - O que sabemos: Auth.js v5 com CredentialsProvider não tem refresh token nativo. ACCESS TTL de 15 min sem refresh = usuário deslogado a cada 15 min de inatividade.
-   - O que está incerto: O usuário quer implementação completa de refresh token (tabela `RefreshToken` + endpoint `/api/auth/refresh`) ou aceita a sessão JWT com `updateAge` renovando automaticamente?
-   - Recomendação: Para v1, usar `maxAge: 7 * 24 * 3600` (7 dias) com `updateAge: 5 * 60` (renova a cada 5 min de atividade). Refresh token real é Phase de hardening.
+   - RESOLVED: JWT com `maxAge: 7 * 24 * 3600` (7 dias) + `updateAge: 5 * 60` (5 min). Sem tabela RefreshToken para MVP. Usuário confirmou explicitamente antes do planejamento.
 
 3. **Cookie read no Express — cookie-parser necessário**
-   - O que sabemos: O middleware Express de auth lê o cookie `authjs.session-token`. Express não parse cookies por padrão.
-   - O que está incerto: Se o projeto já tem `cookie-parser` instalado.
-   - Recomendação: Adicionar `npm install cookie-parser @types/cookie-parser` ao `apps/api`.
+   - RESOLVED: `cookie-parser` adicionado no Plan 03 Task 1 (`apps/api/package.json`).
 
 ---
 
