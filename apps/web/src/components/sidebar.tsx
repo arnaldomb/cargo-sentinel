@@ -1,6 +1,6 @@
 'use client';
 
-import { X, LayoutDashboard, Bell } from 'lucide-react';
+import { X, LayoutDashboard, Bell, Search } from 'lucide-react';
 import type { CameraStatusItem } from '@/lib/dashboard';
 
 type SidebarProps = {
@@ -63,6 +63,15 @@ export function Sidebar({ cameras, userName, userRole, isOpen, onClose }: Sideba
             <LayoutDashboard size={16} aria-hidden="true" />
             Dashboard
           </span>
+
+          {/* Link de busca: visível para todos os roles */}
+          <a
+            href="/buscar"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-200 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <Search size={16} aria-hidden="true" />
+            Buscar
+          </a>
 
           {/* Link de admin: visivel apenas para ADMIN_EMPRESA (ALERTS-06) */}
           {userRole === 'ADMIN_EMPRESA' && (
