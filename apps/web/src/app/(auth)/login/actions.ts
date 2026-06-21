@@ -4,8 +4,8 @@ import { AuthError } from 'next-auth';
 
 export async function loginAction(_prev: unknown, formData: FormData) {
   try {
-    const { signIn } = await import('../../../../auth');
-    await signIn('credentials', {
+    const { signInWithCredentials } = await import('../../../../auth');
+    await signInWithCredentials({
       email: formData.get('email'),
       password: formData.get('password'),
       redirectTo: '/',
@@ -20,6 +20,6 @@ export async function loginAction(_prev: unknown, formData: FormData) {
 
 export async function logoutAction() {
   'use server';
-  const { signOut } = await import('../../../../auth');
-  await signOut({ redirectTo: '/login' });
+  const { signOutWithRedirect } = await import('../../../../auth');
+  await signOutWithRedirect({ redirectTo: '/login' });
 }

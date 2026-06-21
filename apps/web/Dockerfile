@@ -27,8 +27,10 @@ COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
 COPY . .
 
-# Build shared packages first, then web
+# Generate Prisma client and build dependent workspace packages before Next.js
+RUN pnpm --filter @cargo-sentinel/database exec prisma generate
 RUN pnpm --filter @cargo-sentinel/shared build
+RUN pnpm --filter @cargo-sentinel/database build
 RUN pnpm --filter @cargo-sentinel/web build
 
 # Stage 3: Runtime
@@ -44,6 +46,7 @@ COPY --from=builder /app/pnpm-lock.yaml ./
 COPY --from=builder /app/.npmrc ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages/shared ./packages/shared
+COPY --from=builder /app/packages/database ./packages/database
 COPY --from=builder /app/packages/ui ./packages/ui
 COPY --from=builder /app/apps/web ./apps/web
 

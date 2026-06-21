@@ -1,6 +1,8 @@
 import type { NextAuthConfig } from 'next-auth';
 
-export const authConfig = {
+type Role = 'SUPER_ADMIN' | 'ADMIN_EMPRESA' | 'OPERADOR';
+
+export const authConfig: NextAuthConfig = {
   pages: { signIn: '/login' },
   session: {
     strategy: 'jwt',
@@ -19,9 +21,9 @@ export const authConfig = {
     },
     session({ session, token }) {
       session.user.id = token.sub as string;
-      session.user.role = token.role;
-      session.user.empresaId = token.empresaId;
+      session.user.role = token.role as Role;
+      session.user.empresaId = token.empresaId as string | null;
       return session;
     },
   },
-} satisfies NextAuthConfig;
+};

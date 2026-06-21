@@ -15,6 +15,16 @@ type AuthorizeCredentials = {
   password?: string | undefined;
 };
 
+type CredentialsSignInOptions = {
+  email: FormDataEntryValue | null;
+  password: FormDataEntryValue | null;
+  redirectTo: string;
+};
+
+type SignOutOptions = {
+  redirectTo: string;
+};
+
 /**
  * Exported for testing. Validates credentials against the database.
  * Returns user object on success, null on failure.
@@ -43,7 +53,7 @@ export async function authorizeUser(credentials: AuthorizeCredentials) {
   };
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuth = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
@@ -54,3 +64,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
 });
+
+export const handlers = nextAuth.handlers;
+export const auth: typeof nextAuth.auth = nextAuth.auth;
+
+export async function signInWithCredentials(options: CredentialsSignInOptions) {
+  return nextAuth.signIn('credentials', options);
+}
+
+export async function signOutWithRedirect(options: SignOutOptions) {
+  return nextAuth.signOut(options);
+}

@@ -69,6 +69,7 @@ Empresa (tenant)
 
 - [x] Receber eventos LPR via POST /NotificationInfo/:action com foto base64 — Validated in Phase 01: Monorepo LPR Ingestion
 - [x] Armazenar fotos em Garage S3-compat com referência no banco — Validated in Phase 01
+- [x] Stack local Docker Compose sobe com 6 serviços (web, api, postgres, garage, redis, traefik) — Validated locally em 2026-06-21
 - [x] Autenticação JWT com 3 roles (super admin, admin, operador) — Validated in Phase 02: Auth.js v5 JWT sessions
 - [x] Multi-tenancy: cada empresa isolada no mesmo banco via tenantClient — Validated in Phase 02
 - [x] Hierarquia: Empresa > Obra > Câmera com CRUD protegido por RBAC — Validated in Phase 02
@@ -113,4 +114,4 @@ Este documento evolui em transições de fase e marcos de milestone.
 4. Decisões a registrar? → Adicionar em Key Decisions
 
 ---
-*Last updated: 2026-06-20 — Phase 02 complete (Auth + Multi-tenant)*
+*Last updated: 2026-06-21 — Phase 02 complete (Auth + Multi-tenant), local stack + login validated*
