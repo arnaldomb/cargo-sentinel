@@ -20,7 +20,7 @@ with something a human can verify in a browser or terminal.
 - [x] **Phase 2: Auth + Multi-Tenant Hierarchy** - JWT auth with 3 roles and full Empresa > Obra > Camera data model
 - [x] **Phase 3: Real-Time Event Feed + Vehicle Classification** - Live operator dashboard and 5-level plate classification (completed 2026-06-21)
 - [x] **Phase 3.5: UI Design Polish — Identidade Visual ggtech** - Apply ggtech brand colors, typography, and consistent component library across all screens (completed 2026-06-21)
-- [ ] **Phase 4: Cross-Site Intelligence + WhatsApp Alerts** - Multi-site threat correlation and async WhatsApp notifications
+- [x] **Phase 4: Cross-Site Intelligence + WhatsApp Alerts** - Multi-site threat correlation and async WhatsApp notifications (completed 2026-06-21)
 - [ ] **Phase 5: Plate History + Profile** - Full plate timeline, cross-site search, and audit trail
 - [ ] **Phase 6: Reports PDF + Excel with Photos** - Async filtered reports with embedded thumbnails
 - [ ] **Phase 7: Super Admin Panel + Production Deploy** - Tenant management and Hostinger VPS launch
@@ -106,7 +106,13 @@ Plans:
   3. A WhatsApp message is delivered to the admin-configured number within 10 seconds of a level 4 or 5 detection
   4. Sending the same plate twice within 5 minutes results in exactly 1 WhatsApp message (deduplication window enforced)
   5. Admin can add/remove WhatsApp numbers per obra from the management UI
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [x] 04-01-PLAN.md — Schema (ConfiguracaoAlerta + obraClassificacaoId) + Evolution API v2.3.7 + WhatsApp service [INTEL-01, INTEL-02, ALERTS-01, ALERTS-06]
+- [x] 04-02-PLAN.md — Cross-site detection em worker.ts + BullMQ alert queue + alert-worker.ts com dedup Redis [INTEL-01, INTEL-02, ALERTS-02, ALERTS-03, ALERTS-04, ALERTS-05]
+- [x] 04-03-PLAN.md — Socket.IO emitAlertaCrossSite + CrossSiteAlertDTO em dto.ts [INTEL-03, INTEL-04, ALERTS-02]
+- [x] 04-04-PLAN.md — Overlay full-screen no dashboard + admin UI para configuração de números WhatsApp [INTEL-03, INTEL-05, ALERTS-06]
+**UI hint**: yes
 
 ### Phase 5: Plate History + Profile
 **Goal**: Any operator can look up any plate and see its complete detection history across all obras of their empresa — with a full classification audit trail and cursor-based pagination that does not degrade on large datasets.
@@ -155,7 +161,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.5 → 4 → 5 → 6 → 7
 | 2. Auth + Multi-Tenant Hierarchy | 4/4 | Complete | 2026-06-21 |
 | 3. Real-Time Event Feed + Classification | 4/4 | Complete | 2026-06-21 |
 | 3.5. UI Design Polish — Identidade Visual ggtech | 3/3 | Complete    | 2026-06-21 |
-| 4. Cross-Site Intelligence + WhatsApp Alerts | 0/TBD | Not started | - |
+| 4. Cross-Site Intelligence + WhatsApp Alerts | 4/4 | Complete    | 2026-06-21 |
 | 5. Plate History + Profile | 0/TBD | Not started | - |
 | 6. Reports PDF + Excel with Photos | 0/TBD | Not started | - |
 | 7. Super Admin Panel + Production Deploy | 0/TBD | Not started | - |
