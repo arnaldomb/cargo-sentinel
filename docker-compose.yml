@@ -56,7 +56,7 @@ services:
       - garage-meta:/var/lib/garage/meta
       - garage-data:/var/lib/garage/data
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3900/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3903/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
