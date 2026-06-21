@@ -61,6 +61,7 @@ model Obra {
   id        String   @id @default(cuid())
   nome      String
   endereco  String?
+  ativo     Boolean  @default(true)
   empresaId String
   createdAt DateTime @default(now())
   empresa   Empresa  @relation(fields: [empresaId], references: [id])
@@ -76,6 +77,7 @@ model Camera {
   ip        String?
   obraId    String
   empresaId String
+  ativo     Boolean  @default(true)
   createdAt DateTime @default(now())
   obra      Obra     @relation(fields: [obraId], references: [id])
   empresa   Empresa  @relation(fields: [empresaId], references: [id])
