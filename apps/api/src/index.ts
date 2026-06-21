@@ -11,7 +11,9 @@ import eventosRouter from './routes/eventos';
 import cameraStatusRouter from './routes/camera-status';
 import configuracoesAlertaRouter from './routes/configuracoes-alerta';
 import relatoriosRouter from './routes/relatorios';
+import adminRouter from './routes/admin';
 import { protectedPipeline } from './middleware/pipeline';
+import { requireRole } from './middleware/rbac';
 import { createRealtimeServer } from './realtime/server';
 
 export const app: Express = express();
@@ -41,6 +43,10 @@ app.use('/api/eventos', ...protectedPipeline, eventosRouter);
 app.use('/api/cameras', ...protectedPipeline, cameraStatusRouter);
 app.use('/api/configuracoes-alerta', ...protectedPipeline, configuracoesAlertaRouter);
 app.use('/api/relatorios', ...protectedPipeline, relatoriosRouter);
+
+// Rotas Super Admin — SADMIN-01..04
+// requireRole('SUPER_ADMIN') aplicado ao router inteiro como middleware adicional
+app.use('/api/admin', ...protectedPipeline, requireRole('SUPER_ADMIN'), adminRouter);
 
 export const httpServer = createServer(app);
 export const io = createRealtimeServer(httpServer);
