@@ -1,6 +1,7 @@
 import { Router, type Router as RouterType } from 'express';
 import { requireRole } from '../middleware/rbac';
 import { emitPlacaClassificada } from '../realtime/server';
+import { getPresignedUrl } from '../services/garage';
 
 const CLASSIFICACOES = ['LIBERADO', 'VISITANTE', 'ATENCAO', 'SUSPEITO', 'CRITICO'] as const;
 type ClassificacaoValue = (typeof CLASSIFICACOES)[number];
@@ -95,6 +96,137 @@ router.patch(
       if (code === 'P2025') return res.status(404).json({ error: 'Placa não encontrada' });
       throw err;
     }
+  },
+);
+
+/**
+ * GET /api/placas/:numero/historico
+ *
+ * Retorna eventos paginados (cursor-based) da placa em toda a empresa.
+ * Filtros opcionais: obraId, cameraId, dataInicio, dataFim, cursor, limit.
+ * HISTORY-01, HISTORY-04
+ */
+router.get(
+  '/:numero/historico',
+  requireRole('SUPER_ADMIN', 'ADMIN_EMPRESA', 'OPERADOR'),
+  async (req, res) => {
+    const numero = req.params.numero.toUpperCase().trim();
+    const rawLimit = Number(req.query.limit ?? 20);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 20;
+    const cursor = typeof req.query.cursor === 'string' ? req.query.cursor.trim() : undefined;
+    const obraId = typeof req.query.obraId === 'string' ? req.query.obraId.trim() : undefined;
+    const cameraId = typeof req.query.cameraId === 'string' ? req.query.cameraId.trim() : undefined;
+    const dataInicio = typeof req.query.dataInicio === 'string' ? new Date(req.query.dataInicio) : undefined;
+    const dataFim = typeof req.query.dataFim === 'string' ? new Date(req.query.dataFim) : undefined;
+
+    // Resolve placaId a partir do número (tenantClient já filtra empresaId)
+    const placa = await req.tenantClient!.placa.findFirst({
+      where: { numero },
+      select: {
+        id: true,
+        numero: true,
+        classificacao: true,
+        empresaTransportadora: true,
+        motorista: true,
+        tipoVeiculo: true,
+        observacao: true,
+      },
+    });
+
+    if (!placa) return res.status(404).json({ error: 'Placa não encontrada' });
+
+    const whereFilters: Record<string, unknown> = {
+      placaId: placa.id,
+      ...(obraId && { obraId }),
+      ...(cameraId && { cameraId }),
+      ...(dataInicio || dataFim
+        ? {
+            timestamp: {
+              ...(dataInicio && { gte: dataInicio }),
+              ...(dataFim && { lte: dataFim }),
+            },
+          }
+        : {}),
+    };
+
+    const eventos = await req.tenantClient!.evento.findMany({
+      where: whereFilters,
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      orderBy: { timestamp: 'desc' },
+      select: {
+        id: true,
+        timestamp: true,
+        direcao: true,
+        fotoGarageKey: true,
+        classificacao: true,
+        obra: { select: { id: true, nome: true } },
+        camera: { select: { id: true, codigoLpr: true } },
+      },
+    });
+
+    const hasMore = eventos.length > limit;
+    const page = hasMore ? eventos.slice(0, limit) : eventos;
+
+    const items = await Promise.all(
+      page.map(async (e) => ({
+        id: e.id,
+        timestamp: e.timestamp.toISOString(),
+        direcao: e.direcao,
+        classificacao: e.classificacao,
+        thumbnailUrl: e.fotoGarageKey ? await getPresignedUrl(e.fotoGarageKey) : null,
+        obra: e.obra,
+        camera: e.camera,
+      })),
+    );
+
+    return res.json({
+      placa,
+      items,
+      nextCursor: hasMore ? page[page.length - 1]?.id ?? null : null,
+    });
+  },
+);
+
+/**
+ * GET /api/placas/:numero/classificacoes
+ *
+ * Retorna audit trail cronológico de classificação com nome do usuário responsável.
+ * HISTORY-02
+ */
+router.get(
+  '/:numero/classificacoes',
+  requireRole('SUPER_ADMIN', 'ADMIN_EMPRESA', 'OPERADOR'),
+  async (req, res) => {
+    const numero = req.params.numero.toUpperCase().trim();
+
+    const placa = await req.tenantClient!.placa.findFirst({
+      where: { numero },
+      select: { id: true, numero: true, classificacao: true },
+    });
+
+    if (!placa) return res.status(404).json({ error: 'Placa não encontrada' });
+
+    const historico = await req.tenantClient!.classificacaoHistorico.findMany({
+      where: { placaId: placa.id },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        createdAt: true,
+        classificacaoDe: true,
+        classificacaoPara: true,
+        observacao: true,
+        usuario: { select: { id: true, nome: true } },
+      },
+    });
+
+    return res.json({
+      placa,
+      items: historico.map((h) => ({
+        ...h,
+        createdAt: h.createdAt.toISOString(),
+      })),
+    });
   },
 );
 
