@@ -17,6 +17,7 @@ import {
 import { ClassificationBadge } from './classification-badge';
 import { ClassificationPopover } from './classification-popover';
 import { CriticalConfirmDialog } from './critical-confirm-dialog';
+import { CrossSiteAlertOverlay, type CrossSiteAlertDTO } from './cross-site-alert-overlay';
 import { Sidebar } from './sidebar';
 
 type DashboardClientProps = {
@@ -38,6 +39,9 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
     item: FeedItem;
     classificacao: FeedItem['classificacao'];
   } | null>(null);
+
+  // Cross-site alert overlay state (INTEL-05)
+  const [crossSiteAlert, setCrossSiteAlert] = useState<CrossSiteAlertDTO | null>(null);
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const pinnedToTopRef = useRef(true);
@@ -103,6 +107,11 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
 
     socket.on('feed:camera-status', (incoming: CameraStatusItem) => {
       setCameras((current) => upsertCameraStatus(current, incoming));
+    });
+
+    // Cross-site alert: novo alerta substitui o anterior (INTEL-05)
+    socket.on('feed:alerta-cross-site', (incoming: CrossSiteAlertDTO) => {
+      setCrossSiteAlert(incoming);
     });
 
     socketRef.current = socket;
@@ -287,6 +296,14 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
           classificacaoLabel={getClassificationLabel(confirmDialog.classificacao)}
           onConfirm={handleConfirmCritical}
           onCancel={() => setConfirmDialog(null)}
+        />
+      )}
+
+      {/* Cross-site alert overlay — z-[100] acima de tudo (INTEL-05) */}
+      {crossSiteAlert && (
+        <CrossSiteAlertOverlay
+          alert={crossSiteAlert}
+          onDismiss={() => setCrossSiteAlert(null)}
         />
       )}
     </>
