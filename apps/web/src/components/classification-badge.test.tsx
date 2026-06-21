@@ -23,9 +23,9 @@ describe('ClassificationBadge', () => {
     expect(screen.getByTestId('classification-badge')).toHaveClass('bg-green-600');
   });
 
-  it('aplica classe de fundo laranja para SUSPEITO', () => {
+  it('aplica classe de fundo laranja-escuro para SUSPEITO (spec UI-04: orange-600)', () => {
     render(<ClassificationBadge classificacao="SUSPEITO" />);
-    expect(screen.getByTestId('classification-badge')).toHaveClass('bg-orange-500');
+    expect(screen.getByTestId('classification-badge')).toHaveClass('bg-orange-600');
   });
 
   it('aplica classe de fundo vermelho para CRITICO', () => {

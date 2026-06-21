@@ -67,7 +67,7 @@ export function upsertCameraStatus(
 
 /**
  * Returns the Tailwind CSS background + text color classes for each classification level.
- * LIBERADO=green, VISITANTE=blue, ATENCAO=yellow, SUSPEITO=orange, CRITICO=red
+ * Spec UI-04: LIBERADO=green-600, VISITANTE=gray-500, ATENCAO=yellow-600, SUSPEITO=orange-600, CRITICO=red-700
  */
 export function getClassificationTailwindClasses(classificacao: FeedItem['classificacao']): {
   bg: string;
@@ -78,11 +78,11 @@ export function getClassificationTailwindClasses(classificacao: FeedItem['classi
     case 'LIBERADO':
       return { bg: 'bg-green-600', text: 'text-white', border: 'border-green-600' };
     case 'VISITANTE':
-      return { bg: 'bg-blue-600', text: 'text-white', border: 'border-blue-600' };
+      return { bg: 'bg-gray-500', text: 'text-white', border: 'border-gray-500' };
     case 'ATENCAO':
-      return { bg: 'bg-yellow-500', text: 'text-white', border: 'border-yellow-500' };
+      return { bg: 'bg-yellow-600', text: 'text-white', border: 'border-yellow-600' };
     case 'SUSPEITO':
-      return { bg: 'bg-orange-500', text: 'text-white', border: 'border-orange-500' };
+      return { bg: 'bg-orange-600', text: 'text-white', border: 'border-orange-600' };
     case 'CRITICO':
       return { bg: 'bg-red-700', text: 'text-white', border: 'border-red-700' };
   }
@@ -90,18 +90,18 @@ export function getClassificationTailwindClasses(classificacao: FeedItem['classi
 
 /**
  * Returns the hex color for inline border-left styling on event rows.
- * LIBERADO=green, VISITANTE=blue, ATENCAO=yellow, SUSPEITO=orange, CRITICO=red
+ * Spec UI-04: LIBERADO=#16a34a, VISITANTE=#6b7280, ATENCAO=#ca8a04, SUSPEITO=#ea580c, CRITICO=#b91c1c
  */
 export function getClassificationColor(classificacao: FeedItem['classificacao']): string {
   switch (classificacao) {
     case 'LIBERADO':
       return '#16a34a';
     case 'VISITANTE':
-      return '#2563eb';
+      return '#6b7280';
     case 'ATENCAO':
-      return '#eab308';
+      return '#ca8a04';
     case 'SUSPEITO':
-      return '#f97316';
+      return '#ea580c';
     case 'CRITICO':
       return '#b91c1c';
   }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   getClassificationColor,
+  getClassificationTailwindClasses,
   requiresCriticalConfirmation,
   resolveApiBaseUrl,
   updateFeedClassification,
@@ -102,12 +103,46 @@ describe('dashboard utils', () => {
     expect(updated[0].status).toBe('online');
   });
 
-  it('mapeia cores por classificação', () => {
-    // LIBERADO=green, VISITANTE=blue, ATENCAO=yellow, SUSPEITO=orange, CRITICO=red
+  it('mapeia cores por classificação conforme spec UI-04', () => {
+    // LIBERADO=green-600, VISITANTE=gray-500, ATENCAO=yellow-600, SUSPEITO=orange-600, CRITICO=red-700
     expect(getClassificationColor('LIBERADO')).toBe('#16a34a');
-    expect(getClassificationColor('VISITANTE')).toBe('#2563eb');
-    expect(getClassificationColor('ATENCAO')).toBe('#eab308');
-    expect(getClassificationColor('SUSPEITO')).toBe('#f97316');
+    expect(getClassificationColor('VISITANTE')).toBe('#6b7280');
+    expect(getClassificationColor('ATENCAO')).toBe('#ca8a04');
+    expect(getClassificationColor('SUSPEITO')).toBe('#ea580c');
     expect(getClassificationColor('CRITICO')).toBe('#b91c1c');
+  });
+});
+
+describe('getClassificationTailwindClasses', () => {
+  it('LIBERADO retorna green-600 conforme spec UI-04', () => {
+    expect(getClassificationTailwindClasses('LIBERADO').bg).toBe('bg-green-600');
+    expect(getClassificationTailwindClasses('LIBERADO').border).toBe('border-green-600');
+  });
+
+  it('VISITANTE retorna gray-500 conforme spec UI-04', () => {
+    expect(getClassificationTailwindClasses('VISITANTE').bg).toBe('bg-gray-500');
+    expect(getClassificationTailwindClasses('VISITANTE').border).toBe('border-gray-500');
+  });
+
+  it('ATENCAO retorna yellow-600 conforme spec UI-04', () => {
+    expect(getClassificationTailwindClasses('ATENCAO').bg).toBe('bg-yellow-600');
+    expect(getClassificationTailwindClasses('ATENCAO').border).toBe('border-yellow-600');
+  });
+
+  it('SUSPEITO retorna orange-600 conforme spec UI-04', () => {
+    expect(getClassificationTailwindClasses('SUSPEITO').bg).toBe('bg-orange-600');
+    expect(getClassificationTailwindClasses('SUSPEITO').border).toBe('border-orange-600');
+  });
+
+  it('CRITICO retorna red-700 conforme spec UI-04', () => {
+    expect(getClassificationTailwindClasses('CRITICO').bg).toBe('bg-red-700');
+    expect(getClassificationTailwindClasses('CRITICO').border).toBe('border-red-700');
+  });
+
+  it('todos os níveis retornam text-white', () => {
+    const niveis = ['LIBERADO', 'VISITANTE', 'ATENCAO', 'SUSPEITO', 'CRITICO'] as const;
+    niveis.forEach((nivel) => {
+      expect(getClassificationTailwindClasses(nivel).text).toBe('text-white');
+    });
   });
 });

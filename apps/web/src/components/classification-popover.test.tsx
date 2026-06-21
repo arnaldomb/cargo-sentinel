@@ -42,6 +42,6 @@ describe('ClassificationPopover', () => {
     );
 
     const activeBtn = screen.getByTestId('popover-option-ATENCAO');
-    expect(activeBtn).toHaveClass('bg-yellow-500');
+    expect(activeBtn).toHaveClass('bg-yellow-600');
   });
 });
