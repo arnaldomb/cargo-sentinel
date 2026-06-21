@@ -28,6 +28,9 @@ function buildTenantClient() {
       findFirstOrThrow: vi.fn(),
       update: vi.fn(),
     },
+    evento: {
+      findFirst: vi.fn().mockResolvedValue(null), // default: sem evento recente
+    },
     classificacaoHistorico: {
       create: vi.fn(),
     },

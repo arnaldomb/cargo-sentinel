@@ -1,13 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { LprJobData } from '@cargo-sentinel/shared';
 
-const { prismaMock, uploadToGarageMock, getPresignedUrlMock, emitEventoNovoMock, emitCameraStatusMock } = vi.hoisted(() => {
+const { prismaMock, uploadToGarageMock, getPresignedUrlMock, emitEventoNovoMock, emitCameraStatusMock, alertQueueAddMock } = vi.hoisted(() => {
   const prismaMock = {
     camera: {
       findUnique: vi.fn(),
     },
     placa: {
       upsert: vi.fn(),
+    },
+    obra: {
+      findUnique: vi.fn(),
     },
     evento: {
       upsert: vi.fn(),
@@ -17,7 +20,8 @@ const { prismaMock, uploadToGarageMock, getPresignedUrlMock, emitEventoNovoMock,
   const getPresignedUrlMock = vi.fn();
   const emitEventoNovoMock = vi.fn();
   const emitCameraStatusMock = vi.fn();
-  return { prismaMock, uploadToGarageMock, getPresignedUrlMock, emitEventoNovoMock, emitCameraStatusMock };
+  const alertQueueAddMock = vi.fn().mockResolvedValue(undefined);
+  return { prismaMock, uploadToGarageMock, getPresignedUrlMock, emitEventoNovoMock, emitCameraStatusMock, alertQueueAddMock };
 });
 
 vi.mock('@cargo-sentinel/database', () => ({
@@ -32,6 +36,11 @@ vi.mock('../services/garage', () => ({
 vi.mock('../realtime/server', () => ({
   emitEventoNovo: emitEventoNovoMock,
   emitCameraStatus: emitCameraStatusMock,
+}));
+
+vi.mock('./queue', () => ({
+  alertQueue: { add: alertQueueAddMock },
+  lprQueue: { add: vi.fn() },
 }));
 
 import { processLprJob } from './worker';
@@ -155,5 +164,27 @@ describe('processLprJob', () => {
         }),
       }),
     );
+  });
+
+  it('rejeita evento quando CameraId nao bate com codigoLpr cadastrado', async () => {
+    const jobData: LprJobData = {
+      PlateNumber: 'AB12349',
+      ImageBase64: 'aGVsbG8=',
+      CameraId: '192.168.16.117',
+      Direction: 'in',
+      DateTime: '2026-06-21T16:12:00.000Z',
+      idempotencyKey: 'idem-3',
+    };
+
+    prismaMock.camera.findUnique.mockResolvedValue(null);
+
+    await expect(processLprJob(jobData)).rejects.toThrow('Camera not found: 192.168.16.117');
+
+    expect(prismaMock.camera.findUnique).toHaveBeenCalledWith({
+      where: { codigoLpr: '192.168.16.117' },
+      include: { obra: true },
+    });
+    expect(prismaMock.placa.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.evento.upsert).not.toHaveBeenCalled();
   });
 });

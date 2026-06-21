@@ -28,11 +28,26 @@ router.patch(
         select: { id: true, empresaId: true, classificacao: true, observacao: true },
       });
 
+      // INTEL-02: ao classificar como SUSPEITO/CRITICO, registrar a obra de origem
+      // via o evento mais recente da placa (melhor esforço — sem evento não seta)
+      let obraClassificacaoUpdate: { obraClassificacaoId: string } | Record<string, never> = {};
+      if (classificacaoFinal === 'SUSPEITO' || classificacaoFinal === 'CRITICO') {
+        const ultimoEvento = await req.tenantClient!.evento.findFirst({
+          where: { placaId },
+          orderBy: { timestamp: 'desc' },
+          select: { obraId: true },
+        });
+        if (ultimoEvento) {
+          obraClassificacaoUpdate = { obraClassificacaoId: ultimoEvento.obraId };
+        }
+      }
+
       const placa = await req.tenantClient!.placa.update({
         where: { id: placaId },
         data: {
           classificacao: classificacaoFinal,
           observacao: observacao?.trim() || null,
+          ...obraClassificacaoUpdate,
         },
         select: {
           id: true,

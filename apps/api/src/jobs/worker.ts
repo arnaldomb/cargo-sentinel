@@ -4,6 +4,8 @@ import type { LprJobData } from '@cargo-sentinel/shared';
 import { createRedisConnection } from '../services/redis';
 import { getPresignedUrl, uploadToGarage } from '../services/garage';
 import { emitCameraStatus, emitEventoNovo } from '../realtime/server';
+import { alertQueue } from './queue';
+import type { CrossSiteAlertPayload, WhatsAppAlertPayload } from './alert-worker';
 /**
  * Resolve Direcao enum from raw direction string sent by the camera.
  * Handles both English ('in'/'out') and Portuguese ('entrada'/'saida') variants.
@@ -16,16 +18,23 @@ function resolveDirection(direction: string | undefined): 'ENTRADA' | 'SAIDA' | 
   return null;
 }
 
+async function resolveCamera(cameraIdentifier: string) {
+  if (!cameraIdentifier) return null;
+
+  return prisma.camera.findUnique({
+    where: { codigoLpr: cameraIdentifier },
+    include: { obra: true },
+  });
+}
+
 export async function processLprJob(jobData: LprJobData): Promise<void> {
   const { PlateNumber, ImageBase64, CameraId, Direction, DateTime, idempotencyKey } = jobData;
 
   // V4 access control: validate camera exists in DB before processing
   // empresaId sourced from DB (T-1-D2), never from payload
-  const camera = await prisma.camera.findUnique({
-    where: { codigoLpr: CameraId },
-    include: { obra: true },
-  });
+  const camera = await resolveCamera(CameraId);
   if (!camera) {
+    console.error('[lpr][worker] camera not found', JSON.stringify({ cameraIdentifier: CameraId }));
     throw new Error(`Camera not found: ${CameraId}`);
   }
 
@@ -43,6 +52,69 @@ export async function processLprJob(jobData: LprJobData): Promise<void> {
       classificacao: 'VISITANTE',
     },
   });
+
+  // ── INTEL-01/02: Cross-site intelligence check ───────────────────────────
+  // Classificações que disparam alerta: SUSPEITO (4) ou CRITICO (5)
+  const isHighRisk =
+    placa.classificacao === 'SUSPEITO' || placa.classificacao === 'CRITICO';
+
+  // INTEL-02: cross-site = placa foi classificada em OUTRA obra
+  // obraClassificacaoId === null: placa nunca foi classificada manualmente — não é cross-site
+  const isCrossSite =
+    isHighRisk &&
+    placa.obraClassificacaoId !== null &&
+    placa.obraClassificacaoId !== camera.obraId;
+
+  if (isCrossSite && placa.obraClassificacaoId) {
+    // Buscar nome da obra de classificação original para o payload
+    const obraClassificacao = await prisma.obra.findUnique({
+      where: { id: placa.obraClassificacaoId },
+      select: { id: true, nome: true },
+    });
+
+    const obraClassificacaoNome = obraClassificacao?.nome ?? 'Obra desconhecida';
+
+    const crossSitePayload: CrossSiteAlertPayload = {
+      empresaId: camera.empresaId,
+      placaNumero: PlateNumber,
+      classificacao: placa.classificacao as 'SUSPEITO' | 'CRITICO',
+      obraDetectadaId: camera.obraId,
+      obraDetectadaNome: camera.obra.nome,
+      obraClassificacaoId: placa.obraClassificacaoId,
+      obraClassificacaoNome,
+      eventoId: idempotencyKey, // placeholder — evento ainda não criado; atualizado em Plan 04-03
+      timestamp: new Date(DateTime).toISOString(),
+    };
+
+    const whatsAppPayload: WhatsAppAlertPayload = {
+      empresaId: camera.empresaId,
+      obraId: camera.obraId, // obra que detectou — tem ConfiguracaoAlerta
+      placaNumero: PlateNumber,
+      classificacao: placa.classificacao as 'SUSPEITO' | 'CRITICO',
+      obraDetectadaNome: camera.obra.nome,
+      obraClassificacaoNome,
+      timestamp: new Date(DateTime).toISOString(),
+    };
+
+    // Enfileira os dois jobs — alert-worker processa com concorrência 1 (ALERTS-03)
+    await Promise.all([
+      alertQueue.add('alert:cross-site', { type: 'alert:cross-site', payload: crossSitePayload }),
+      alertQueue.add('alert:whatsapp', { type: 'alert:whatsapp', payload: whatsAppPayload }),
+    ]);
+  } else if (isHighRisk && !placa.obraClassificacaoId) {
+    // Placa de alto risco sem obra de classificação registrada — envia WhatsApp mas sem overlay cross-site
+    const whatsAppPayload: WhatsAppAlertPayload = {
+      empresaId: camera.empresaId,
+      obraId: camera.obraId,
+      placaNumero: PlateNumber,
+      classificacao: placa.classificacao as 'SUSPEITO' | 'CRITICO',
+      obraDetectadaNome: camera.obra.nome,
+      obraClassificacaoNome: 'Não especificada',
+      timestamp: new Date(DateTime).toISOString(),
+    };
+    await alertQueue.add('alert:whatsapp', { type: 'alert:whatsapp', payload: whatsAppPayload });
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Decode base64 image and upload to Garage (internal endpoint)
   const imageBuffer = Buffer.from(ImageBase64, 'base64');
