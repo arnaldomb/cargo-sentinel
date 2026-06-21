@@ -39,6 +39,8 @@ model Empresa {
   obras     Obra[]
   cameras   Camera[]
   eventos   Evento[]
+  placas    Placa[]
+  historico ClassificacaoHistorico[]
   users     User[]
 }
 
@@ -52,9 +54,48 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   empresa      Empresa? @relation(fields: [empresaId], references: [id])
+  historico    ClassificacaoHistorico[]
 
   @@index([empresaId])
   @@index([email])
+}
+
+model Placa {
+  id                    String         @id @default(cuid())
+  numero                String
+  empresaId             String
+  empresaTransportadora String?
+  motorista             String?
+  tipoVeiculo           String?
+  material              String?
+  observacao            String?
+  classificacao         Classificacao  @default(VISITANTE)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  empresa               Empresa        @relation(fields: [empresaId], references: [id])
+  eventos               Evento[]
+  historico             ClassificacaoHistorico[]
+
+  @@unique([numero, empresaId])
+  @@index([empresaId, classificacao])
+}
+
+model ClassificacaoHistorico {
+  id                String         @id @default(cuid())
+  placaId           String
+  empresaId         String
+  classificacaoDe   Classificacao?
+  classificacaoPara Classificacao
+  observacao        String?
+  usuarioId         String
+  createdAt         DateTime       @default(now())
+  placa             Placa          @relation(fields: [placaId], references: [id])
+  empresa           Empresa        @relation(fields: [empresaId], references: [id])
+  usuario           User           @relation(fields: [usuarioId], references: [id])
+
+  @@index([placaId, createdAt(sort: Desc)])
+  @@index([empresaId, createdAt(sort: Desc)])
+  @@index([usuarioId, createdAt(sort: Desc)])
 }
 
 model Obra {
@@ -91,6 +132,7 @@ model Evento {
   id             String        @id @default(cuid())
   timestamp      DateTime      @default(now())
   placaNumero    String
+  placaId        String?
   direcao        Direcao?
   fotoGarageKey  String?
   idempotencyKey String        @unique
@@ -99,12 +141,14 @@ model Evento {
   empresaId      String
   classificacao  Classificacao @default(VISITANTE)
   rawPayload     Json?
+  placa          Placa?        @relation(fields: [placaId], references: [id])
   camera         Camera        @relation(fields: [cameraId], references: [id])
   obra           Obra          @relation(fields: [obraId], references: [id])
   empresa        Empresa       @relation(fields: [empresaId], references: [id])
 
   @@index([empresaId, timestamp])
   @@index([empresaId, placaNumero])
+  @@index([placaId])
   @@index([obraId, timestamp])
   @@index([cameraId])
 }
