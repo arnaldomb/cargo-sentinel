@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-06-21T01:18:54.903Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-06-21T12:10:11.971Z"
 last_activity: 2026-06-21
 progress:
   total_phases: 7
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_plans: 12
+  completed_plans: 9
+  percent: 75
 ---
 
 # Project State
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-20)
 
 **Core value:** Em 1 clique, o operador classifica um veículo suspeito. Na próxima leitura em qualquer obra da empresa, o alerta dispara automaticamente.
-**Current focus:** Phase 02 — auth-multi-tenant-hierarchy
+**Current focus:** Phase 03 — real-time-event-feed-classification
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
+Phase: 03 (real-time-event-feed-classification) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
 Last activity: 2026-06-21
 
@@ -53,7 +53,8 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
-| Phase 02 P03 | 25 | 3 tasks | 8 files |
+| Phase 02 P04 | 16 | 2 tasks | 7 files |
+| Phase 03 P01 | 30 | 4 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -70,17 +71,21 @@ Recent decisions affecting current work:
 - [Phase 02]: jose.jwtDecrypt + @panva/hkdf for Express JWE verification (D5 locked — no jsonwebtoken)
 - [Phase 02]: SUPER_ADMIN receives prisma raw in tenantMiddleware — createTenantClient never called with null empresaId
 - [Phase 02]: protectedPipeline=[authMiddleware, tenantMiddleware] exported from index.ts for Plan 04 route composition
+- [Phase 03]: findFirstOrThrow via tenantClient garante isolamento cross-tenant sem verificação manual de empresaId
+- [Phase 03]: upsert com update:{} no worker é idempotente: replays do BullMQ não sobrescrevem classificacao existente
 
 ### Pending Todos
 
-None yet.
+- Execute 03-01-PLAN.md
+- Implementar `Placa` + auditoria + endpoint de classificação
+- Atualizar `03-VERIFICATION.md` conforme a execução avançar
 
 ### Blockers/Concerns
 
-None yet.
+- Fase 3 estava sem planos até 2026-06-21; execução só deve começar a partir de 03-01-PLAN.md
 
 ## Session Continuity
 
-Last session: 2026-06-21T00:25:47.679Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-06-21T12:10:11.968Z
+Stopped at: Completed 03-01-PLAN.md
 Resume file: None

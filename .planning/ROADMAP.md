@@ -15,8 +15,8 @@ then async reports (Phase 6), and finally the Super Admin panel and production d
 - Integer phases (1-7): Planned milestone work for v1
 - Decimal phases (e.g., 2.1): Urgent insertions via /gsd-insert-phase
 
-- [ ] **Phase 1: Monorepo + LPR Ingestion + Storage** - Foundation scaffold, camera webhook, Garage image storage
-- [ ] **Phase 2: Auth + Multi-Tenant Hierarchy** - JWT auth with 3 roles and full Empresa > Obra > Camera data model
+- [x] **Phase 1: Monorepo + LPR Ingestion + Storage** - Foundation scaffold, camera webhook, Garage image storage
+- [x] **Phase 2: Auth + Multi-Tenant Hierarchy** - JWT auth with 3 roles and full Empresa > Obra > Camera data model
 - [ ] **Phase 3: Real-Time Event Feed + Vehicle Classification** - Live operator dashboard and 5-level plate classification
 - [ ] **Phase 4: Cross-Site Intelligence + WhatsApp Alerts** - Multi-site threat correlation and async WhatsApp notifications
 - [ ] **Phase 5: Plate History + Profile** - Full plate timeline, cross-site search, and audit trail
@@ -52,7 +52,12 @@ Plans:
   3. An Operador token grants read-only access to obras/cameras of their empresa and is rejected by admin-only endpoints
   4. A Super Admin JWT carries `empresaId: null` and can query any tenant without error
   5. After logout, the refresh token cookie is cleared and previously issued tokens cannot refresh
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [x] 02-01-PLAN.md — User model + Role enum + seed demo users [AUTH-03, TENANT-01..04]
+- [x] 02-02-PLAN.md — Auth.js v5 login/logout + JWT claims [AUTH-01, AUTH-02, AUTH-04, AUTH-06]
+- [x] 02-03-PLAN.md — Express auth/tenant/RBAC middleware [AUTH-05, AUTH-03, TENANT-06]
+- [x] 02-04-PLAN.md — CRUD Obras/Câmeras com isolamento de tenant [TENANT-05, TENANT-06]
 
 ### Phase 3: Real-Time Event Feed + Vehicle Classification
 **Goal**: Operators see a live feed of all LPR events for their empresa with color-coded classification, can classify a plate in one click from the feed, and the classification change is reflected instantly for all connected users of that tenant.
@@ -64,7 +69,12 @@ Plans:
   3. Operator can open an inline popover on any feed row and change classification with one click — confirmation dialog appears for levels 4 and 5
   4. After classifying a plate, the change is visible to a second browser window logged in as the same tenant within 2 seconds
   5. Each camera in the sidebar shows online/offline status with timestamp of last received event
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [x] 03-01-PLAN.md — `Placa` + auditoria + endpoint de reclassificação [PLACA-01, PLACA-02, PLACA-03, PLACA-04, PLACA-07]
+- [ ] 03-02-PLAN.md — Socket.IO + auth JWE + rooms por tenant [REALTIME-01, REALTIME-02]
+- [ ] 03-03-PLAN.md — Feed REST + status de câmeras + emissão realtime [REALTIME-03, REALTIME-05, REALTIME-07]
+- [ ] 03-04-PLAN.md — Dashboard web + classificação inline + confirmação crítica [PLACA-05, PLACA-06, REALTIME-04, REALTIME-06]
 **UI hint**: yes
 
 ### Phase 4: Cross-Site Intelligence + WhatsApp Alerts
@@ -122,9 +132,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Monorepo + LPR Ingestion + Storage | 0/4 | Planned | - |
-| 2. Auth + Multi-Tenant Hierarchy | 3/4 | In Progress|  |
-| 3. Real-Time Event Feed + Classification | 0/TBD | Not started | - |
+| 1. Monorepo + LPR Ingestion + Storage | 4/4 | Complete | 2026-06-20 |
+| 2. Auth + Multi-Tenant Hierarchy | 4/4 | Complete | 2026-06-21 |
+| 3. Real-Time Event Feed + Classification | 1/4 | In Progress|  |
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 0/TBD | Not started | - |
 | 5. Plate History + Profile | 0/TBD | Not started | - |
 | 6. Reports PDF + Excel with Photos | 0/TBD | Not started | - |

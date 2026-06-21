@@ -4,25 +4,25 @@
 
 ### INFRA — Infraestrutura e Monorepo
 
-- [ ] **INFRA-01**: Monorepo Turborepo 2.x + pnpm com workspaces: `apps/web`, `apps/api`, `packages/database`, `packages/shared`, `packages/ui`
-- [ ] **INFRA-02**: `packages/database` exporta `createTenantClient(prisma, empresaId)` — injeta `empresaId` em toda operação via Prisma `$extends`
-- [ ] **INFRA-03**: Docker Compose com serviços: `web` (Next.js), `api` (Express), `postgres`, `garage` (S3), `redis`, `traefik`
-- [ ] **INFRA-04**: Traefik v3 roteando por path: `/media/*` → Garage, `/api/*` → Express, `/*` → Next.js
-- [ ] **INFRA-05**: `acme.json` em volume persistente para certificados Let's Encrypt
+- [x] **INFRA-01**: Monorepo Turborepo 2.x + pnpm com workspaces: `apps/web`, `apps/api`, `packages/database`, `packages/shared`, `packages/ui`
+- [x] **INFRA-02**: `packages/database` exporta `createTenantClient(prisma, empresaId)` — injeta `empresaId` em toda operação via Prisma `$extends`
+- [x] **INFRA-03**: Docker Compose com serviços: `web` (Next.js), `api` (Express), `postgres`, `garage` (S3), `redis`, `traefik`
+- [x] **INFRA-04**: Traefik v3 roteando por path: `/media/*` → Garage, `/api/*` → Express, `/*` → Next.js
+- [x] **INFRA-05**: `acme.json` em volume persistente para certificados Let's Encrypt
 
 ### LPR — Ingestão de Eventos de Câmera
 
-- [ ] **LPR-01**: Endpoint `POST /api/lpr/NotificationInfo/:action` aceita payload Intelbras com imagem base64
-- [ ] **LPR-02**: Endpoint retorna HTTP 200 imediatamente e processa evento de forma assíncrona via BullMQ
-- [ ] **LPR-03**: Idempotência via `idempotencyKey = SHA256(cameraId + placa + timestamp)` — câmera pode reenviar sem duplicar evento
-- [ ] **LPR-04**: Imagem decodificada de base64 e enviada ao Garage (nunca armazenada em base64 no banco)
-- [ ] **LPR-05**: `fotoGarageKey` (object key) salvo no banco — URL presignada gerada sob demanda com TTL 5 min
+- [x] **LPR-01**: Endpoint `POST /api/lpr/NotificationInfo/:action` aceita payload Intelbras com imagem base64
+- [x] **LPR-02**: Endpoint retorna HTTP 200 imediatamente e processa evento de forma assíncrona via BullMQ
+- [x] **LPR-03**: Idempotência via `idempotencyKey = SHA256(cameraId + placa + timestamp)` — câmera pode reenviar sem duplicar evento
+- [x] **LPR-04**: Imagem decodificada de base64 e enviada ao Garage (nunca armazenada em base64 no banco)
+- [x] **LPR-05**: `fotoGarageKey` (object key) salvo no banco — URL presignada gerada sob demanda com TTL 5 min
 
 ### STORAGE — Armazenamento de Imagens
 
-- [ ] **STORAGE-01**: Garage v2.x rodando como serviço Docker com bucket `lpr-images`
-- [ ] **STORAGE-02**: `GARAGE_SERVER_URL` configurado com URL pública HTTPS (evita falha de assinatura presigned URL)
-- [ ] **STORAGE-03**: API gera presigned GET URLs para cada imagem — frontend nunca acessa Garage diretamente
+- [x] **STORAGE-01**: Garage v2.x rodando como serviço Docker com bucket `lpr-images`
+- [x] **STORAGE-02**: `GARAGE_SERVER_URL` configurado com URL pública HTTPS (evita falha de assinatura presigned URL)
+- [x] **STORAGE-03**: API gera presigned GET URLs para cada imagem — frontend nunca acessa Garage diretamente
 
 ### AUTH — Autenticação e Autorização
 
@@ -35,22 +35,22 @@
 
 ### TENANT — Hierarquia Multi-Tenant
 
-- [ ] **TENANT-01**: Entidade `Empresa` (tenant) com CNPJ, nome, status (ativo/suspenso)
-- [ ] **TENANT-02**: Entidade `Obra` pertence a uma `Empresa` — com nome, endereço, status
-- [ ] **TENANT-03**: Entidade `Camera` pertence a uma `Obra` com código único (`LPR-0001`), IP, status
-- [ ] **TENANT-04**: `empresaId` denormalizado em `Camera` e `Evento` para queries cross-site eficientes
-- [ ] **TENANT-05**: Admin Empresa pode criar/editar/desativar Obras e Câmeras da sua empresa
+- [x] **TENANT-01**: Entidade `Empresa` (tenant) com CNPJ, nome, status (ativo/suspenso)
+- [x] **TENANT-02**: Entidade `Obra` pertence a uma `Empresa` — com nome, endereço, status
+- [x] **TENANT-03**: Entidade `Camera` pertence a uma `Obra` com código único (`LPR-0001`), IP, status
+- [x] **TENANT-04**: `empresaId` denormalizado em `Camera` e `Evento` para queries cross-site eficientes
+- [x] **TENANT-05**: Admin Empresa pode criar/editar/desativar Obras e Câmeras da sua empresa
 - [x] **TENANT-06**: Operador vê apenas as obras/câmeras da sua empresa
 
 ### PLACA — Cadastro e Classificação de Veículos
 
-- [ ] **PLACA-01**: Entidade `Placa` com `@@unique([numero, empresaId])` — classificação é por tenant
-- [ ] **PLACA-02**: Campos: número, empresa transportadora, motorista, tipo veículo, material, classificação (1-5), observação
-- [ ] **PLACA-03**: Classificação em 5 níveis: Liberado (1), Visitante (2), Atenção (3), Suspeito (4), Crítico (5)
-- [ ] **PLACA-04**: Nova placa detectada automaticamente recebe classificação padrão Visitante (2)
+- [x] **PLACA-01**: Entidade `Placa` com `@@unique([numero, empresaId])` — classificação é por tenant
+- [x] **PLACA-02**: Campos: número, empresa transportadora, motorista, tipo veículo, material, classificação (1-5), observação
+- [x] **PLACA-03**: Classificação em 5 níveis: Liberado (1), Visitante (2), Atenção (3), Suspeito (4), Crítico (5)
+- [x] **PLACA-04**: Nova placa detectada automaticamente recebe classificação padrão Visitante (2)
 - [ ] **PLACA-05**: Operador classifica veículo em 1 clique no feed — popover inline sem navegar de página
 - [ ] **PLACA-06**: Confirmação obrigatória para escalar para nível 4 ou 5
-- [ ] **PLACA-07**: Mudança de classificação registrada em log de auditoria com usuário e timestamp
+- [x] **PLACA-07**: Mudança de classificação registrada em log de auditoria com usuário e timestamp
 
 ### REALTIME — Painel em Tempo Real
 
@@ -137,38 +137,38 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| INFRA-01 | Phase 1 | Pending |
-| INFRA-02 | Phase 1 | Pending |
-| INFRA-03 | Phase 1 | Pending |
-| INFRA-04 | Phase 1 | Pending |
-| INFRA-05 | Phase 1 | Pending |
-| LPR-01 | Phase 1 | Pending |
-| LPR-02 | Phase 1 | Pending |
-| LPR-03 | Phase 1 | Pending |
-| LPR-04 | Phase 1 | Pending |
-| LPR-05 | Phase 1 | Pending |
-| STORAGE-01 | Phase 1 | Pending |
-| STORAGE-02 | Phase 1 | Pending |
-| STORAGE-03 | Phase 1 | Pending |
+| INFRA-01 | Phase 1 | Complete |
+| INFRA-02 | Phase 1 | Complete |
+| INFRA-03 | Phase 1 | Complete |
+| INFRA-04 | Phase 1 | Complete |
+| INFRA-05 | Phase 1 | Complete |
+| LPR-01 | Phase 1 | Complete |
+| LPR-02 | Phase 1 | Complete |
+| LPR-03 | Phase 1 | Complete |
+| LPR-04 | Phase 1 | Complete |
+| LPR-05 | Phase 1 | Complete |
+| STORAGE-01 | Phase 1 | Complete |
+| STORAGE-02 | Phase 1 | Complete |
+| STORAGE-03 | Phase 1 | Complete |
 | AUTH-01 | Phase 2 | Complete |
 | AUTH-02 | Phase 2 | Complete |
 | AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Complete |
 | AUTH-05 | Phase 2 | Complete |
 | AUTH-06 | Phase 2 | Complete |
-| TENANT-01 | Phase 2 | Pending |
-| TENANT-02 | Phase 2 | Pending |
-| TENANT-03 | Phase 2 | Pending |
-| TENANT-04 | Phase 2 | Pending |
-| TENANT-05 | Phase 2 | Pending |
+| TENANT-01 | Phase 2 | Complete |
+| TENANT-02 | Phase 2 | Complete |
+| TENANT-03 | Phase 2 | Complete |
+| TENANT-04 | Phase 2 | Complete |
+| TENANT-05 | Phase 2 | Complete |
 | TENANT-06 | Phase 2 | Complete |
-| PLACA-01 | Phase 3 | Pending |
-| PLACA-02 | Phase 3 | Pending |
-| PLACA-03 | Phase 3 | Pending |
-| PLACA-04 | Phase 3 | Pending |
+| PLACA-01 | Phase 3 | Complete |
+| PLACA-02 | Phase 3 | Complete |
+| PLACA-03 | Phase 3 | Complete |
+| PLACA-04 | Phase 3 | Complete |
 | PLACA-05 | Phase 3 | Pending |
 | PLACA-06 | Phase 3 | Pending |
-| PLACA-07 | Phase 3 | Pending |
+| PLACA-07 | Phase 3 | Complete |
 | REALTIME-01 | Phase 3 | Pending |
 | REALTIME-02 | Phase 3 | Pending |
 | REALTIME-03 | Phase 3 | Pending |
