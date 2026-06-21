@@ -18,7 +18,7 @@ router.get(
     const obras = await req.tenantClient!.obra.findMany({
       where: { ativo: true },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, nome: true, endereco: true, ativo: true, createdAt: true },
+      select: { id: true, nome: true, endereco: true, ativo: true, createdAt: true, _count: { select: { cameras: true } } },
     });
     res.json(obras);
   },

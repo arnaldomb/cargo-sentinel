@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { auth } from '../../../../auth';
+import { DeleteObraButton } from './delete-obra-button';
 
 const API_BASE = process.env.INTERNAL_API_URL ?? 'http://localhost:4000';
 
@@ -28,11 +29,12 @@ export default async function GestaoPage() {
       cache: 'no-store',
     });
     if (res.ok) {
-      const data = (await res.json()) as { obras: Obra[] };
-      obras = data.obras.filter((o) => o.ativo);
+      // API returns array directly
+      const data = (await res.json()) as Obra[];
+      obras = Array.isArray(data) ? data.filter((o) => o.ativo) : [];
     }
   } catch {
-    // Falha silenciosa — exibe lista vazia
+    // falha silenciosa — exibe lista vazia
   }
 
   return (
@@ -49,7 +51,7 @@ export default async function GestaoPage() {
             href="/gestao/obras/nova"
             className="rounded-md bg-ggtech-blue px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
           >
-            Nova Obra
+            + Nova Obra
           </a>
         </div>
 
@@ -82,15 +84,24 @@ export default async function GestaoPage() {
                       {obra.endereco ?? <span className="italic text-slate-400">—</span>}
                     </td>
                     <td className="px-4 py-3 text-center text-slate-700">
-                      {obra._count?.cameras ?? '—'}
+                      {obra._count?.cameras ?? 0}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <a
-                        href={`/gestao/obras/${obra.id}`}
-                        className="rounded px-3 py-1 text-sm font-medium text-ggtech-blue hover:underline"
-                      >
-                        Gerenciar
-                      </a>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        <a
+                          href={`/gestao/obras/${obra.id}`}
+                          className="rounded px-3 py-1 text-sm font-medium text-ggtech-blue border border-ggtech-blue hover:bg-ggtech-blue hover:text-white transition-colors"
+                        >
+                          Câmeras
+                        </a>
+                        <a
+                          href={`/gestao/obras/${obra.id}/editar`}
+                          className="rounded px-3 py-1 text-sm font-medium text-slate-600 border border-slate-300 hover:bg-slate-50 transition-colors"
+                        >
+                          Editar
+                        </a>
+                        <DeleteObraButton obraId={obra.id} />
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -37,7 +37,7 @@ export default async function ObraDetalhePage({
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
-  // Buscar lista de obras e filtrar pelo id (Express não tem GET /obras/:id individual)
+  // API returns array directly — no wrapper object
   let obra: Obra | undefined;
   try {
     const res = await fetch(`${API_BASE}/api/obras`, {
@@ -45,18 +45,16 @@ export default async function ObraDetalhePage({
       cache: 'no-store',
     });
     if (res.ok) {
-      const data = (await res.json()) as { obras: Obra[] };
-      obra = data.obras.find((o) => o.id === id);
+      const data = (await res.json()) as Obra[];
+      obra = Array.isArray(data) ? data.find((o) => o.id === id) : undefined;
     }
   } catch {
-    // Falha silenciosa
+    // falha silenciosa
   }
 
-  if (!obra) {
-    notFound();
-  }
+  if (!obra) notFound();
 
-  // Buscar câmeras da obra
+  // Cameras API also returns array directly
   let cameras: Camera[] = [];
   try {
     const res = await fetch(`${API_BASE}/api/obras/${id}/cameras`, {
@@ -64,11 +62,11 @@ export default async function ObraDetalhePage({
       cache: 'no-store',
     });
     if (res.ok) {
-      const data = (await res.json()) as { cameras: Camera[] };
-      cameras = data.cameras.filter((c) => c.ativo);
+      const data = (await res.json()) as Camera[];
+      cameras = Array.isArray(data) ? data.filter((c) => c.ativo) : [];
     }
   } catch {
-    // Falha silenciosa
+    // falha silenciosa
   }
 
   return (
@@ -81,24 +79,34 @@ export default async function ObraDetalhePage({
           </a>
           <div className="mt-2 flex items-center justify-between gap-4">
             <div>
-              <h1 className="font-heading text-2xl font-bold text-slate-900">{obra.nome}</h1>
+              <h1 className="font-heading text-2xl font-bold text-slate-900">{obra!.nome}</h1>
               <p className="mt-1 text-sm text-slate-500">
-                {obra.endereco ?? 'Endereço não informado'}
+                {obra!.endereco ?? 'Endereço não informado'}
               </p>
             </div>
-            <DeleteObraButton obraId={id} />
+            <div className="flex items-center gap-2">
+              <a
+                href={`/gestao/obras/${id}/editar`}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                Editar Obra
+              </a>
+              <DeleteObraButton obraId={id} />
+            </div>
           </div>
         </div>
 
         {/* Câmeras */}
         <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-            <h2 className="font-heading text-lg font-semibold text-slate-800">Câmeras</h2>
+            <h2 className="font-heading text-lg font-semibold text-slate-800">
+              Câmeras ({cameras.length})
+            </h2>
             <a
               href={`/gestao/obras/${id}/cameras/nova`}
               className="rounded-md bg-ggtech-blue px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 transition-opacity"
             >
-              Nova Câmera
+              + Nova Câmera
             </a>
           </div>
 
@@ -126,7 +134,9 @@ export default async function ObraDetalhePage({
               <tbody className="divide-y divide-slate-100">
                 {cameras.map((camera) => (
                   <tr key={camera.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-slate-800">{camera.codigoLpr}</td>
+                    <td className="px-4 py-3 font-mono text-sm font-medium text-slate-800">
+                      {camera.codigoLpr}
+                    </td>
                     <td className="px-4 py-3 text-slate-500">
                       {camera.ip ?? <span className="italic text-slate-400">—</span>}
                     </td>
