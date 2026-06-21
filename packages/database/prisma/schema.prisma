@@ -43,6 +43,7 @@ model Empresa {
   historico     ClassificacaoHistorico[]
   users         User[]
   configuracoes ConfiguracaoAlerta[]
+  relatorios    Relatorio[]
 }
 
 model User {
@@ -56,6 +57,7 @@ model User {
   updatedAt    DateTime @updatedAt
   empresa      Empresa? @relation(fields: [empresaId], references: [id])
   historico    ClassificacaoHistorico[]
+  relatorios   Relatorio[] @relation("RelatoriosUsuario")
 
   @@index([empresaId])
   @@index([email])
@@ -178,4 +180,35 @@ model ConfiguracaoAlerta {
   @@unique([obraId, telefone])
   @@index([empresaId])
   @@index([obraId])
+}
+
+// ============================================================
+// Relatorio — Async PDF/Excel report generation (REPORTS-01)
+// Status lifecycle: PENDENTE → PROCESSANDO → PRONTO | ERRO
+// garageKey preenchido quando PRONTO: reports/{empresaId}/{id}.pdf|.xlsx
+// ============================================================
+enum RelatorioStatus {
+  PENDENTE
+  PROCESSANDO
+  PRONTO
+  ERRO
+}
+
+model Relatorio {
+  id           String          @id @default(cuid())
+  empresaId    String
+  status       RelatorioStatus @default(PENDENTE)
+  formato      String          // "PDF" | "XLSX"
+  filtros      Json            // { dataInicio?, dataFim?, obraId?, cameraId?, classificacao?, placa? }
+  garageKey    String?         // preenchido quando PRONTO: reports/{empresaId}/{id}.pdf ou .xlsx
+  expiresAt    DateTime?       // now() + 1h ao marcar PRONTO (REPORTS-07)
+  erroMsg      String?         // preenchido quando ERRO
+  criadoPor    String          // userId do solicitante
+  criadoEm    DateTime        @default(now())
+  atualizadoEm DateTime       @updatedAt
+  empresa      Empresa         @relation(fields: [empresaId], references: [id])
+  usuario      User            @relation("RelatoriosUsuario", fields: [criadoPor], references: [id])
+
+  @@index([empresaId, criadoEm(sort: Desc)]) // listagem tenant-scoped (REPORTS-01)
+  @@index([criadoPor, criadoEm(sort: Desc)]) // filtrar por usuário
 }
