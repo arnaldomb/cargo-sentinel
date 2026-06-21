@@ -156,7 +156,12 @@ Plans:
   3. Super Admin can suspend an empresa — all logins for that tenant are rejected until reactivated
   4. Super Admin can generate an impersonation token and act as any tenant for support purposes
   5. Production URL responds with HTTPS (Let's Encrypt certificate), all 6 services healthy, and a real Intelbras camera payload round-trips end-to-end
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 07-01-PLAN.md — Super Admin backend API: GET/POST empresas, PATCH status, POST impersonate [SADMIN-01, SADMIN-02, SADMIN-03, SADMIN-04]
+- [ ] 07-02-PLAN.md — Super Admin frontend: layout (superadmin), dashboard /admin, formulário /admin/empresas/nova, ações suspend/impersonate [SADMIN-01, SADMIN-02, SADMIN-03, SADMIN-04, SADMIN-05]
+- [ ] 07-03-PLAN.md — Production hardening: healthchecks Docker, fail-fast API, .env.example completo [SADMIN-05]
+- [ ] 07-04-PLAN.md — Smoke test end-to-end + README deploy Hostinger VPS [SADMIN-05]
 **UI hint**: yes
 
 ## Progress
@@ -173,4 +178,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.5 → 4 → 5 → 6 → 7
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 4/4 | Complete    | 2026-06-21 |
 | 5. Plate History + Profile | 3/3 | Complete    | 2026-06-21 |
 | 6. Reports PDF + Excel with Photos | 4/4 | Complete    | 2026-06-21 |
-| 7. Super Admin Panel + Production Deploy | 0/TBD | Not started | - |
+| 7. Super Admin Panel + Production Deploy | 0/4 | Not started | - |
