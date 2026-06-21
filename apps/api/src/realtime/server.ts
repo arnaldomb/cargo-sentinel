@@ -74,3 +74,12 @@ export function emitPlacaClassificada(empresaId: string, payload: unknown): void
 export function emitCameraStatus(empresaId: string, payload: unknown): void {
   emitToEmpresa(getRealtimeServer(), empresaId, 'feed:camera-status', payload);
 }
+
+/**
+ * Emite alerta cross-site para todos os operadores da empresa.
+ * Stub ampliado em Plan 04-03 com o tipo CrossSiteAlertPayload completo.
+ * INTEL-04: broadcast para sala empresa:{empresaId}
+ */
+export function emitAlertaCrossSite(empresaId: string, payload: unknown): void {
+  emitToEmpresa(getRealtimeServer(), empresaId, 'feed:alerta-cross-site', payload);
+}
