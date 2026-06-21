@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Roadmap written — ready to begin /gsd-plan-phase 1
-last_updated: "2026-06-20T19:30:30.993Z"
-last_activity: 2026-06-20
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-06-21T00:25:47.682Z"
+last_activity: 2026-06-21
 progress:
   total_phases: 7
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 100
+  total_plans: 8
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-20)
 
 **Core value:** Em 1 clique, o operador classifica um veículo suspeito. Na próxima leitura em qualquer obra da empresa, o alerta dispara automaticamente.
-**Current focus:** Phase 01 — monorepo-lpr-ingestion-storage
+**Current focus:** Phase 02 — auth-multi-tenant-hierarchy
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
-Status: Executing Phase 01
-Last activity: 2026-06-20
+Phase: 02 (auth-multi-tenant-hierarchy) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-06-21
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 02 P03 | 25 | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,9 @@ Recent decisions affecting current work:
 - Project init: Row-level multitenancy via createTenantClient() — no Postgres RLS
 - Project init: Tailwind v3 (v4 not fully supported by shadcn/ui)
 - Phase 1 critical: createTenantClient(prisma, empresaId) must be built and exported before Phase 2
+- [Phase 02]: jose.jwtDecrypt + @panva/hkdf for Express JWE verification (D5 locked — no jsonwebtoken)
+- [Phase 02]: SUPER_ADMIN receives prisma raw in tenantMiddleware — createTenantClient never called with null empresaId
+- [Phase 02]: protectedPipeline=[authMiddleware, tenantMiddleware] exported from index.ts for Plan 04 route composition
 
 ### Pending Todos
 
@@ -76,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-20
-Stopped at: Roadmap written — ready to begin /gsd-plan-phase 1
+Last session: 2026-06-21T00:25:47.679Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None

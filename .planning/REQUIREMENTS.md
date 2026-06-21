@@ -28,9 +28,9 @@
 
 - [x] **AUTH-01**: Usuário pode fazer login com email/senha
 - [x] **AUTH-02**: JWT contém `{ sub, empresaId, role, iat, exp }` — Super Admin tem `empresaId: null` explícito
-- [ ] **AUTH-03**: Três roles: `SUPER_ADMIN`, `ADMIN_EMPRESA`, `OPERADOR` com permissões distintas
+- [x] **AUTH-03**: Três roles: `SUPER_ADMIN`, `ADMIN_EMPRESA`, `OPERADOR` com permissões distintas
 - [x] **AUTH-04**: Token de acesso com TTL 15 min — refresh token em cookie httpOnly
-- [ ] **AUTH-05**: Middleware Express valida JWT e injeta `req.tenantClient = createTenantClient(prisma, req.user.empresaId)`
+- [x] **AUTH-05**: Middleware Express valida JWT e injeta `req.tenantClient = createTenantClient(prisma, req.user.empresaId)`
 - [x] **AUTH-06**: Usuário pode fazer logout de qualquer página
 
 ### TENANT — Hierarquia Multi-Tenant
@@ -40,7 +40,7 @@
 - [ ] **TENANT-03**: Entidade `Camera` pertence a uma `Obra` com código único (`LPR-0001`), IP, status
 - [ ] **TENANT-04**: `empresaId` denormalizado em `Camera` e `Evento` para queries cross-site eficientes
 - [ ] **TENANT-05**: Admin Empresa pode criar/editar/desativar Obras e Câmeras da sua empresa
-- [ ] **TENANT-06**: Operador vê apenas as obras/câmeras da sua empresa
+- [x] **TENANT-06**: Operador vê apenas as obras/câmeras da sua empresa
 
 ### PLACA — Cadastro e Classificação de Veículos
 
@@ -152,16 +152,16 @@
 | STORAGE-03 | Phase 1 | Pending |
 | AUTH-01 | Phase 2 | Complete |
 | AUTH-02 | Phase 2 | Complete |
-| AUTH-03 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Complete |
-| AUTH-05 | Phase 2 | Pending |
+| AUTH-05 | Phase 2 | Complete |
 | AUTH-06 | Phase 2 | Complete |
 | TENANT-01 | Phase 2 | Pending |
 | TENANT-02 | Phase 2 | Pending |
 | TENANT-03 | Phase 2 | Pending |
 | TENANT-04 | Phase 2 | Pending |
 | TENANT-05 | Phase 2 | Pending |
-| TENANT-06 | Phase 2 | Pending |
+| TENANT-06 | Phase 2 | Complete |
 | PLACA-01 | Phase 3 | Pending |
 | PLACA-02 | Phase 3 | Pending |
 | PLACA-03 | Phase 3 | Pending |
