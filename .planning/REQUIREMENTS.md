@@ -110,7 +110,7 @@
 - [ ] **SADMIN-02**: Super Admin pode criar nova empresa (tenant) com admin inicial
 - [ ] **SADMIN-03**: Super Admin pode suspender/reativar empresa
 - [ ] **SADMIN-04**: Super Admin pode impersonar empresa para suporte (token temporário)
-- [ ] **SADMIN-05**: Dashboard de uso: eventos/dia por empresa, câmeras ativas, alertas gerados
+- [x] **SADMIN-05**: Dashboard de uso: eventos/dia por empresa, câmeras ativas, alertas gerados
 
 ---
 
@@ -215,4 +215,4 @@
 | SADMIN-02 | Phase 7 | Pending |
 | SADMIN-03 | Phase 7 | Pending |
 | SADMIN-04 | Phase 7 | Pending |
-| SADMIN-05 | Phase 7 | Pending |
+| SADMIN-05 | Phase 7 | Complete |
