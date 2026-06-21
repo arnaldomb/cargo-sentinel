@@ -31,17 +31,18 @@ enum Role {
 }
 
 model Empresa {
-  id        String        @id @default(cuid())
-  nome      String
-  cnpj      String        @unique
-  status    EmpresaStatus @default(ATIVO)
-  createdAt DateTime      @default(now())
-  obras     Obra[]
-  cameras   Camera[]
-  eventos   Evento[]
-  placas    Placa[]
-  historico ClassificacaoHistorico[]
-  users     User[]
+  id            String        @id @default(cuid())
+  nome          String
+  cnpj          String        @unique
+  status        EmpresaStatus @default(ATIVO)
+  createdAt     DateTime      @default(now())
+  obras         Obra[]
+  cameras       Camera[]
+  eventos       Evento[]
+  placas        Placa[]
+  historico     ClassificacaoHistorico[]
+  users         User[]
+  configuracoes ConfiguracaoAlerta[]
 }
 
 model User {
@@ -70,9 +71,11 @@ model Placa {
   material              String?
   observacao            String?
   classificacao         Classificacao  @default(VISITANTE)
+  obraClassificacaoId   String?
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
   empresa               Empresa        @relation(fields: [empresaId], references: [id])
+  obraClassificacao     Obra?          @relation("PlacaClassificacaoObra", fields: [obraClassificacaoId], references: [id])
   eventos               Evento[]
   historico             ClassificacaoHistorico[]
 
@@ -99,15 +102,17 @@ model ClassificacaoHistorico {
 }
 
 model Obra {
-  id        String   @id @default(cuid())
-  nome      String
-  endereco  String?
-  ativo     Boolean  @default(true)
-  empresaId String
-  createdAt DateTime @default(now())
-  empresa   Empresa  @relation(fields: [empresaId], references: [id])
-  cameras   Camera[]
-  eventos   Evento[]
+  id                  String               @id @default(cuid())
+  nome                String
+  endereco            String?
+  ativo               Boolean              @default(true)
+  empresaId           String
+  createdAt           DateTime             @default(now())
+  empresa             Empresa              @relation(fields: [empresaId], references: [id])
+  cameras             Camera[]
+  eventos             Evento[]
+  configuracoes       ConfiguracaoAlerta[]
+  placasClassificadas Placa[]              @relation("PlacaClassificacaoObra")
 
   @@index([empresaId])
 }
@@ -151,4 +156,24 @@ model Evento {
   @@index([placaId])
   @@index([obraId, timestamp])
   @@index([cameraId])
+}
+
+// ============================================================
+// ConfiguracaoAlerta — WhatsApp alert recipients per obra
+// ALERTS-06: Admin configures phone numbers per obra
+// ALERTS-05: @@unique([obraId, telefone]) prevents duplicates
+// ============================================================
+model ConfiguracaoAlerta {
+  id        String   @id @default(cuid())
+  obraId    String
+  empresaId String
+  telefone  String   // E.164 format: +5511999999999
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  obra      Obra     @relation(fields: [obraId], references: [id])
+  empresa   Empresa  @relation(fields: [empresaId], references: [id])
+
+  @@unique([obraId, telefone])
+  @@index([empresaId])
+  @@index([obraId])
 }
