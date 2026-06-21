@@ -164,123 +164,120 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
 
   return (
     <>
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar com câmeras — responsiva (drawer no mobile) */}
-        <Sidebar
-          cameras={cameras}
-          userName={userName}
-          userRole={userRole}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
+      {/* Sidebar com câmeras — responsiva (drawer no mobile) */}
+      <Sidebar
+        cameras={cameras}
+        userName={userName}
+        userRole={userRole}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-        {/* Main — live event feed */}
-        <main className="flex flex-1 flex-col overflow-hidden p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* Botão hamburger — visível apenas em mobile (lg:hidden) */}
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden"
-                aria-label="Abrir menu de câmeras"
-                data-testid="hamburger-btn"
-              >
-                <Menu size={20} />
-              </button>
-              <div>
-                <h2 className="font-heading text-lg font-bold text-slate-900">Feed Operacional</h2>
-                <p className="text-sm text-slate-500">Eventos ao vivo com classificação inline.</p>
-              </div>
+      {/* Main — live event feed */}
+      <main className="flex flex-1 flex-col overflow-hidden p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* Botão hamburger — visível apenas em mobile (lg:hidden) */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden"
+              aria-label="Abrir menu de câmeras"
+              data-testid="hamburger-btn"
+            >
+              <Menu size={20} />
+            </button>
+            <div>
+              <h2 className="font-heading text-lg font-bold text-slate-900">Feed Operacional</h2>
+              <p className="text-sm text-slate-500">Eventos ao vivo com classificação inline.</p>
             </div>
+          </div>
 
-            {pendingCount > 0 && (
-              <button
-                onClick={scrollToTopAndResume}
-                className="rounded-full bg-ggtech-blue px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-                data-testid="pending-events-btn"
+          {pendingCount > 0 && (
+            <button
+              onClick={scrollToTopAndResume}
+              className="rounded-full bg-ggtech-blue px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+              data-testid="pending-events-btn"
+            >
+              {pendingCount} novos eventos ↑
+            </button>
+          )}
+        </div>
+
+        {loading && <p className="text-sm text-slate-500">Carregando painel...</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
+
+        <div
+          ref={listRef}
+          onScroll={handleFeedScroll}
+          className="flex flex-col gap-3 overflow-y-auto pr-1"
+          data-testid="event-feed"
+        >
+          {!loading &&
+            !error &&
+            feed.map((item) => (
+              <article
+                key={item.id}
+                className="grid grid-cols-[120px_1fr_auto] items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                style={{
+                  borderLeftColor: getClassificationColor(item.classificacao),
+                  borderLeftWidth: 6,
+                }}
+                data-testid="event-row"
               >
-                {pendingCount} novos eventos ↑
-              </button>
-            )}
-          </div>
+                {/* Thumbnail */}
+                <div className="flex h-[72px] w-[120px] items-center justify-center overflow-hidden rounded-lg bg-slate-100 text-xs text-slate-400">
+                  {item.thumbnailUrl ? (
+                    <img
+                      src={item.thumbnailUrl}
+                      alt={`Leitura da placa ${item.placaNumero}`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    'Sem foto'
+                  )}
+                </div>
 
-          {loading && (
-            <p className="text-sm text-slate-500">Carregando painel...</p>
-          )}
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
-
-          <div
-            ref={listRef}
-            onScroll={handleFeedScroll}
-            className="flex flex-col gap-3 overflow-y-auto pr-1"
-            data-testid="event-feed"
-          >
-            {!loading &&
-              !error &&
-              feed.map((item) => (
-                <article
-                  key={item.id}
-                  className="grid grid-cols-[120px_1fr_auto] items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
-                  style={{ borderLeftColor: getClassificationColor(item.classificacao), borderLeftWidth: 6 }}
-                  data-testid="event-row"
-                >
-                  {/* Thumbnail */}
-                  <div className="flex h-[72px] w-[120px] items-center justify-center overflow-hidden rounded-lg bg-slate-100 text-xs text-slate-400">
-                    {item.thumbnailUrl ? (
-                      <img
-                        src={item.thumbnailUrl}
-                        alt={`Leitura da placa ${item.placaNumero}`}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      'Sem foto'
-                    )}
+                {/* Info */}
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <strong className="text-xl font-bold tracking-wider">{item.placaNumero}</strong>
+                    <span className="text-sm text-slate-500">
+                      {item.obra.nome} · {item.camera.codigoLpr}
+                    </span>
                   </div>
-
-                  {/* Info */}
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <strong className="text-xl font-bold tracking-wider">{item.placaNumero}</strong>
-                      <span className="text-sm text-slate-500">
-                        {item.obra.nome} · {item.camera.codigoLpr}
-                      </span>
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap gap-3 text-sm text-slate-500">
-                      <span>{new Date(item.timestamp).toLocaleString('pt-BR')}</span>
-                      <span>{item.direcao ?? 'Direção não informada'}</span>
-                    </div>
+                  <div className="mt-1.5 flex flex-wrap gap-3 text-sm text-slate-500">
+                    <span>{new Date(item.timestamp).toLocaleString('pt-BR')}</span>
+                    <span>{item.direcao ?? 'Direção não informada'}</span>
                   </div>
+                </div>
 
-                  {/* Classification badge + popover */}
-                  <div className="flex flex-col items-end gap-2">
-                    <button
-                      onClick={() =>
-                        setActivePlacaId((current) =>
-                          current === item.placaId ? null : item.placaId,
-                        )
-                      }
-                      disabled={!item.placaId}
-                      aria-label={`Classificação: ${item.classificacao}. Clique para alterar.`}
-                      data-testid="classification-badge-btn"
-                    >
-                      <ClassificationBadge classificacao={item.classificacao} />
-                    </button>
+                {/* Classification badge + popover */}
+                <div className="flex flex-col items-end gap-2">
+                  <button
+                    onClick={() =>
+                      setActivePlacaId((current) =>
+                        current === item.placaId ? null : item.placaId,
+                      )
+                    }
+                    disabled={!item.placaId}
+                    aria-label={`Classificação: ${item.classificacao}. Clique para alterar.`}
+                    data-testid="classification-badge-btn"
+                  >
+                    <ClassificationBadge classificacao={item.classificacao} />
+                  </button>
 
-                    {activePlacaId === item.placaId && item.placaId && (
-                      <ClassificationPopover
-                        current={item.classificacao}
-                        onSelect={(opt) => handleClassificationSelect(item, opt)}
-                        onClose={() => setActivePlacaId(null)}
-                      />
-                    )}
-                  </div>
-                </article>
-              ))}
-          </div>
-        </main>
-      </div>
+                  {activePlacaId === item.placaId && item.placaId && (
+                    <ClassificationPopover
+                      current={item.classificacao}
+                      onSelect={(opt) => handleClassificationSelect(item, opt)}
+                      onClose={() => setActivePlacaId(null)}
+                    />
+                  )}
+                </div>
+              </article>
+            ))}
+        </div>
+      </main>
 
       {/* Critical confirmation dialog */}
       {confirmDialog && (

@@ -11,9 +11,9 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
+    <div className="flex h-screen flex-col overflow-hidden bg-gray-50">
       {/* Top bar */}
-      <header className="flex items-center justify-between bg-ggtech-darkblue px-6 py-3 shadow-md">
+      <header className="flex flex-shrink-0 items-center justify-between bg-ggtech-darkblue px-6 py-3 shadow-md">
         <div>
           <h1 className="font-heading text-xl font-bold text-white">Cargo Sentinel</h1>
           <p className="text-xs text-blue-200">
@@ -31,11 +31,13 @@ export default async function Home() {
         </form>
       </header>
 
-      {/* Body: sidebar + main */}
-      <DashboardClient
-        userName={session.user.name ?? session.user.email ?? 'Operador'}
-        userRole={session.user.role}
-      />
+      {/* Body: sidebar + main — contido na altura restante */}
+      <div className="flex flex-1 overflow-hidden">
+        <DashboardClient
+          userName={session.user.name ?? session.user.email ?? 'Operador'}
+          userRole={session.user.role}
+        />
+      </div>
     </div>
   );
 }
