@@ -165,4 +165,105 @@ describe('eventos routes', () => {
     expect(res.body.items[0].thumbnailUrl).toBeNull();
     expect(getPresignedUrlMock).not.toHaveBeenCalled();
   });
+
+  // -----------------------------------------------------------------------
+  // GET /buscar — HISTORY-03, HISTORY-04
+  // -----------------------------------------------------------------------
+
+  it('GET /buscar sem filtros retorna items e nextCursor null', async () => {
+    mockRequireRole.mockImplementation((_req: Request, _res: Response, next: NextFunction) => next());
+    getPresignedUrlMock.mockResolvedValue('https://garage.example/thumb.jpg');
+    tenantClient.evento.findMany.mockResolvedValue([sampleEvento]);
+
+    const app = buildApp({ id: 'user1', role: 'OPERADOR', empresaId: 'emp1' }, tenantClient);
+
+    const res = await request(app).get('/api/eventos/buscar');
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0]).toMatchObject({
+      id: 'evt1',
+      placaNumero: 'ABC1234',
+      placaId: 'pla1',
+      direcao: 'ENTRADA',
+      classificacao: 'VISITANTE',
+      thumbnailUrl: 'https://garage.example/thumb.jpg',
+      obra: { id: 'obra1', nome: 'Obra Centro' },
+      camera: { id: 'cam1', codigoLpr: 'LPR-0001' },
+    });
+    expect(res.body.nextCursor).toBeNull();
+    // without filters, where is empty
+    expect(tenantClient.evento.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: {} }),
+    );
+  });
+
+  it('GET /buscar com placa="ABC" filtra por placaNumero contendo "ABC" (case-insensitive)', async () => {
+    mockRequireRole.mockImplementation((_req: Request, _res: Response, next: NextFunction) => next());
+    getPresignedUrlMock.mockResolvedValue(null);
+    tenantClient.evento.findMany.mockResolvedValue([{ ...sampleEvento, fotoGarageKey: null }]);
+
+    const app = buildApp({ id: 'user1', role: 'OPERADOR', empresaId: 'emp1' }, tenantClient);
+
+    await request(app).get('/api/eventos/buscar?placa=ABC');
+
+    expect(tenantClient.evento.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { placaNumero: { contains: 'ABC', mode: 'insensitive' } },
+      }),
+    );
+  });
+
+  it('GET /buscar com obraId filtra por obra', async () => {
+    mockRequireRole.mockImplementation((_req: Request, _res: Response, next: NextFunction) => next());
+    getPresignedUrlMock.mockResolvedValue(null);
+    tenantClient.evento.findMany.mockResolvedValue([]);
+
+    const app = buildApp({ id: 'user1', role: 'OPERADOR', empresaId: 'emp1' }, tenantClient);
+
+    await request(app).get('/api/eventos/buscar?obraId=obra1');
+
+    expect(tenantClient.evento.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { obraId: 'obra1' },
+      }),
+    );
+  });
+
+  it('GET /buscar retorna nextCursor quando há mais items que limit', async () => {
+    mockRequireRole.mockImplementation((_req: Request, _res: Response, next: NextFunction) => next());
+    getPresignedUrlMock.mockResolvedValue(null);
+    // 3 items para limit=2
+    const eventos = Array.from({ length: 3 }, (_, i) => ({
+      ...sampleEvento,
+      id: `evt${i + 1}`,
+      fotoGarageKey: null,
+    }));
+    tenantClient.evento.findMany.mockResolvedValue(eventos);
+
+    const app = buildApp({ id: 'user1', role: 'OPERADOR', empresaId: 'emp1' }, tenantClient);
+
+    const res = await request(app).get('/api/eventos/buscar?limit=2');
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(2);
+    expect(res.body.nextCursor).toBe('evt2');
+  });
+
+  it('GET /buscar passa cursor corretamente ao findMany', async () => {
+    mockRequireRole.mockImplementation((_req: Request, _res: Response, next: NextFunction) => next());
+    getPresignedUrlMock.mockResolvedValue(null);
+    tenantClient.evento.findMany.mockResolvedValue([]);
+
+    const app = buildApp({ id: 'user1', role: 'OPERADOR', empresaId: 'emp1' }, tenantClient);
+
+    await request(app).get('/api/eventos/buscar?cursor=evt5');
+
+    expect(tenantClient.evento.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cursor: { id: 'evt5' },
+        skip: 1,
+      }),
+    );
+  });
 });
