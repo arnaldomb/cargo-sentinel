@@ -80,6 +80,10 @@ services:
       # AWS SDK v3 + Garage checksum compatibility
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      # Evolution API — WhatsApp alerts (ALERTS-01, ALERTS-03)
+      EVOLUTION_API_URL: http://evolution-api:8080
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
+      EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME:-cargo-sentinel}
     ports:
       - "4000:4000"
     depends_on:
@@ -89,15 +93,48 @@ services:
         condition: service_healthy
       garage:
         condition: service_started
+      evolution-api:
+        condition: service_started
     networks:
       - sentinel
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`${PUBLIC_DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.api.rule=Host(`${PUBLIC_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/NotificationInfo`))"
       - "traefik.http.routers.api.priority=30"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       - "traefik.http.services.api.loadbalancer.server.port=4000"
+
+  # ============================================================
+  # evolution-api — WhatsApp messaging via Evolution API v2.3.7
+  # HARD-PINNED: v2.3.7 — DO NOT upgrade to 2.4.0+ (requires
+  # external license server activation — breaks self-hosted SLAs)
+  # ALERTS-01: internal only, not exposed via Traefik
+  # ============================================================
+  evolution-api:
+    image: atendai/evolution-api:2.3.7
+    restart: unless-stopped
+    environment:
+      SERVER_URL: ${EVOLUTION_SERVER_URL:-http://evolution-api:8080}
+      AUTHENTICATION_TYPE: apikey
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      DATABASE_ENABLED: "false"
+      REDIS_ENABLED: "true"
+      REDIS_URI: redis://redis:6379
+      REDIS_PREFIX_KEY: evolution
+      WEBHOOK_GLOBAL_ENABLED: "false"
+      STORE_MESSAGES: "false"
+      STORE_MESSAGE_UP: "false"
+      STORE_CONTACTS: "false"
+      STORE_CHATS: "false"
+      DEL_INSTANCE: "false"
+    volumes:
+      - evolution-instances:/evolution/instances
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sentinel
 
   # ============================================================
   # web — Next.js 15 dashboard
@@ -166,3 +203,4 @@ volumes:
   redis-data:
   garage-meta:
   garage-data:
+  evolution-instances:
