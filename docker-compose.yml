@@ -55,6 +55,12 @@ services:
       - ./garage/garage.toml:/etc/garage.toml
       - garage-meta:/var/lib/garage/meta
       - garage-data:/var/lib/garage/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3900/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - sentinel
     labels:
@@ -86,14 +92,21 @@ services:
       EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME:-cargo-sentinel}
     ports:
       - "4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       garage:
-        condition: service_started
+        condition: service_healthy
       evolution-api:
+        # evolution-api can be slow to start; keep service_started to avoid blocking api
         condition: service_started
     networks:
       - sentinel
@@ -128,6 +141,12 @@ services:
       STORE_CONTACTS: "false"
       STORE_CHATS: "false"
       DEL_INSTANCE: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - evolution-instances:/evolution/instances
     depends_on:
@@ -150,11 +169,19 @@ services:
       NODE_ENV: production
       AUTH_TRUST_HOST: "true"
       NEXTAUTH_URL: http://localhost:3000
+      INTERNAL_API_URL: http://api:4000
       NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     ports:
       - "3000:3000"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     networks:
       - sentinel
     labels:
@@ -184,6 +211,12 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--ping=true"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     ports:
       - "80:80"
       - "443:443"
