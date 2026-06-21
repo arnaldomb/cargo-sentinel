@@ -20,6 +20,9 @@
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.0",
-    "typescript": "^5.4.0"
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "^5.4.0",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.1.9"
   }
 }
