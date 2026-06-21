@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { Menu } from 'lucide-react';
 import { io, type Socket } from 'socket.io-client';
 import {
@@ -249,7 +250,13 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
                 {/* Info */}
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <strong className="text-xl font-bold tracking-wider">{item.placaNumero}</strong>
+                    <Link
+                      href={`/placas/${item.placaNumero}`}
+                      className="text-xl font-bold tracking-wider text-slate-900 underline-offset-2 hover:underline hover:text-ggtech-blue"
+                      data-testid="placa-link"
+                    >
+                      {item.placaNumero}
+                    </Link>
                     <span className="text-sm text-slate-500">
                       {item.obra.nome} · {item.camera.codigoLpr}
                     </span>
