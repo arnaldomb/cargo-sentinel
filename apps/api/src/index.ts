@@ -9,6 +9,7 @@ import camerasRouter from './routes/cameras';
 import placasRouter from './routes/placas';
 import eventosRouter from './routes/eventos';
 import cameraStatusRouter from './routes/camera-status';
+import configuracoesAlertaRouter from './routes/configuracoes-alerta';
 import { protectedPipeline } from './middleware/pipeline';
 import { createRealtimeServer } from './realtime/server';
 
@@ -37,6 +38,7 @@ app.use('/api/obras/:obraId/cameras', ...protectedPipeline, camerasRouter);
 app.use('/api/placas', ...protectedPipeline, placasRouter);
 app.use('/api/eventos', ...protectedPipeline, eventosRouter);
 app.use('/api/cameras', ...protectedPipeline, cameraStatusRouter);
+app.use('/api/configuracoes-alerta', ...protectedPipeline, configuracoesAlertaRouter);
 
 export const httpServer = createServer(app);
 export const io = createRealtimeServer(httpServer);

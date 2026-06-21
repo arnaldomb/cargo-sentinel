@@ -1,6 +1,6 @@
 'use client';
 
-import { X, LayoutDashboard } from 'lucide-react';
+import { X, LayoutDashboard, Bell } from 'lucide-react';
 import type { CameraStatusItem } from '@/lib/dashboard';
 
 type SidebarProps = {
@@ -55,7 +55,7 @@ export function Sidebar({ cameras, userName, userRole, isOpen, onClose }: Sideba
         </div>
 
         {/* Nav item: Dashboard (sempre ativo — single-page app) */}
-        <nav className="mb-4">
+        <nav className="mb-4 flex flex-col gap-1">
           <span
             className="flex items-center gap-2 rounded-lg bg-ggtech-blue px-3 py-2 text-sm font-semibold text-white"
             aria-current="page"
@@ -63,6 +63,17 @@ export function Sidebar({ cameras, userName, userRole, isOpen, onClose }: Sideba
             <LayoutDashboard size={16} aria-hidden="true" />
             Dashboard
           </span>
+
+          {/* Link de admin: visivel apenas para ADMIN_EMPRESA (ALERTS-06) */}
+          {userRole === 'ADMIN_EMPRESA' && (
+            <a
+              href="/configuracoes/alertas"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-200 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <Bell size={16} aria-hidden="true" />
+              Alertas WhatsApp
+            </a>
+          )}
         </nav>
 
         {/* Lista de câmeras */}
