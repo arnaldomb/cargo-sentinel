@@ -23,7 +23,7 @@ with something a human can verify in a browser or terminal.
 - [x] **Phase 4: Cross-Site Intelligence + WhatsApp Alerts** - Multi-site threat correlation and async WhatsApp notifications (completed 2026-06-21)
 - [x] **Phase 5: Plate History + Profile** - Full plate timeline, cross-site search, and audit trail (completed 2026-06-21)
 - [x] **Phase 6: Reports PDF + Excel with Photos** - Async filtered reports with embedded thumbnails (completed 2026-06-21)
-- [ ] **Phase 7: Super Admin Panel + Production Deploy** - Tenant management and Hostinger VPS launch
+- [x] **Phase 7: Super Admin Panel + Production Deploy** - Tenant management and Hostinger VPS launch (completed 2026-06-21)
 
 ## Phase Details
 
@@ -161,7 +161,7 @@ Plans:
 - [x] 07-01-PLAN.md — Super Admin backend API: GET/POST empresas, PATCH status, POST impersonate [SADMIN-01, SADMIN-02, SADMIN-03, SADMIN-04]
 - [x] 07-02-PLAN.md — Super Admin frontend: layout (superadmin), dashboard /admin, formulário /admin/empresas/nova, ações suspend/impersonate [SADMIN-01, SADMIN-02, SADMIN-03, SADMIN-04, SADMIN-05]
 - [x] 07-03-PLAN.md — Production hardening: healthchecks Docker, fail-fast API, .env.example completo [SADMIN-05]
-- [ ] 07-04-PLAN.md — Smoke test end-to-end + README deploy Hostinger VPS [SADMIN-05]
+- [x] 07-04-PLAN.md — Smoke test end-to-end + README deploy Hostinger VPS [SADMIN-05]
 **UI hint**: yes
 
 ## Progress
@@ -178,4 +178,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.5 → 4 → 5 → 6 → 7
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 4/4 | Complete    | 2026-06-21 |
 | 5. Plate History + Profile | 3/3 | Complete    | 2026-06-21 |
 | 6. Reports PDF + Excel with Photos | 4/4 | Complete    | 2026-06-21 |
-| 7. Super Admin Panel + Production Deploy | 3/4 | In Progress|  |
+| 7. Super Admin Panel + Production Deploy | 4/4 | Complete   | 2026-06-21 |
