@@ -22,7 +22,7 @@ with something a human can verify in a browser or terminal.
 - [x] **Phase 3.5: UI Design Polish — Identidade Visual ggtech** - Apply ggtech brand colors, typography, and consistent component library across all screens (completed 2026-06-21)
 - [x] **Phase 4: Cross-Site Intelligence + WhatsApp Alerts** - Multi-site threat correlation and async WhatsApp notifications (completed 2026-06-21)
 - [x] **Phase 5: Plate History + Profile** - Full plate timeline, cross-site search, and audit trail (completed 2026-06-21)
-- [ ] **Phase 6: Reports PDF + Excel with Photos** - Async filtered reports with embedded thumbnails
+- [x] **Phase 6: Reports PDF + Excel with Photos** - Async filtered reports with embedded thumbnails (completed 2026-06-21)
 - [ ] **Phase 7: Super Admin Panel + Production Deploy** - Tenant management and Hostinger VPS launch
 
 ## Phase Details
@@ -141,10 +141,10 @@ Plans:
   5. Reports capped at 1,000 events and the download link expires after 1 hour
 **Plans**: 4 plans
 Plans:
-- [ ] 06-01-PLAN.md — Schema Relatorio + BullMQ reportQueue + worker stub [REPORTS-01]
-- [ ] 06-02-PLAN.md — Worker completo: generatePDF (pdfkit) + generateXLSX (exceljs) + Garage upload + Socket.IO report:pronto [REPORTS-02, REPORTS-03, REPORTS-05, REPORTS-06, REPORTS-07]
-- [ ] 06-03-PLAN.md — REST API: POST /api/relatorios (202 async), GET list, GET/:id/download [REPORTS-01, REPORTS-04, REPORTS-05, REPORTS-07]
-- [ ] 06-04-PLAN.md — Frontend: /relatorios page, ReportForm com filtros, ReportList com Socket.IO, link na sidebar [REPORTS-01, REPORTS-04, REPORTS-06, REPORTS-07]
+- [x] 06-01-PLAN.md — Schema Relatorio + BullMQ reportQueue + worker stub [REPORTS-01]
+- [x] 06-02-PLAN.md — Worker completo: generatePDF (pdfkit) + generateXLSX (exceljs) + Garage upload + Socket.IO report:pronto [REPORTS-02, REPORTS-03, REPORTS-05, REPORTS-06, REPORTS-07]
+- [x] 06-03-PLAN.md — REST API: POST /api/relatorios (202 async), GET list, GET/:id/download [REPORTS-01, REPORTS-04, REPORTS-05, REPORTS-07]
+- [x] 06-04-PLAN.md — Frontend: /relatorios page, ReportForm com filtros, ReportList com Socket.IO, link na sidebar [REPORTS-01, REPORTS-04, REPORTS-06, REPORTS-07]
 
 ### Phase 7: Super Admin Panel + Production Deploy
 **Goal**: The Super Admin can manage all tenants from a dedicated panel, and the full application is running on the Hostinger VPS under Traefik with HTTPS — accessible at its production domain.
@@ -172,5 +172,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.5 → 4 → 5 → 6 → 7
 | 3.5. UI Design Polish — Identidade Visual ggtech | 3/3 | Complete    | 2026-06-21 |
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 4/4 | Complete    | 2026-06-21 |
 | 5. Plate History + Profile | 3/3 | Complete    | 2026-06-21 |
-| 6. Reports PDF + Excel with Photos | 0/4 | Not started | - |
+| 6. Reports PDF + Excel with Photos | 4/4 | Complete    | 2026-06-21 |
 | 7. Super Admin Panel + Production Deploy | 0/TBD | Not started | - |
