@@ -2,12 +2,13 @@
 
 ## Overview
 
-Cargo Sentinel is built in 7 phases that follow a strict dependency order: the monorepo
+Cargo Sentinel is built in 7 phases (plus a decimal polish phase) that follow a strict dependency order: the monorepo
 scaffold and LPR ingestion pipeline come first (Phase 1), then multi-tenant auth unlocks
 all tenant-scoped work (Phase 2), then the real-time operator UI (Phase 3), then
-cross-site intelligence and WhatsApp alerts (Phase 4), then plate history (Phase 5),
-then async reports (Phase 6), and finally the Super Admin panel and production deploy
-(Phase 7). Every phase closes with something a human can verify in a browser or terminal.
+UI/design polish to brand standards (Phase 3.5), then cross-site intelligence and
+WhatsApp alerts (Phase 4), then plate history (Phase 5), then async reports (Phase 6),
+and finally the Super Admin panel and production deploy (Phase 7). Every phase closes
+with something a human can verify in a browser or terminal.
 
 ## Phases
 
@@ -18,6 +19,7 @@ then async reports (Phase 6), and finally the Super Admin panel and production d
 - [x] **Phase 1: Monorepo + LPR Ingestion + Storage** - Foundation scaffold, camera webhook, Garage image storage
 - [x] **Phase 2: Auth + Multi-Tenant Hierarchy** - JWT auth with 3 roles and full Empresa > Obra > Camera data model
 - [x] **Phase 3: Real-Time Event Feed + Vehicle Classification** - Live operator dashboard and 5-level plate classification (completed 2026-06-21)
+- [ ] **Phase 3.5: UI Design Polish — Identidade Visual ggtech** - Apply ggtech brand colors, typography, and consistent component library across all screens
 - [ ] **Phase 4: Cross-Site Intelligence + WhatsApp Alerts** - Multi-site threat correlation and async WhatsApp notifications
 - [ ] **Phase 5: Plate History + Profile** - Full plate timeline, cross-site search, and audit trail
 - [ ] **Phase 6: Reports PDF + Excel with Photos** - Async filtered reports with embedded thumbnails
@@ -77,6 +79,19 @@ Plans:
 - [x] 03-04-PLAN.md — Dashboard web + classificação inline + confirmação crítica [PLACA-05, PLACA-06, REALTIME-04, REALTIME-06]
 **UI hint**: yes
 
+### Phase 3.5: UI Design Polish — Identidade Visual ggtech
+**Goal**: Apply the ggtech/opencheck visual identity consistently across all existing screens: dark-blue sidebar (#003366), primary action buttons (#0056b3), secondary accent (#007bff), Roboto for body text and Open Sans for headings via `next/font`, consistent button/input/card/badge sizing, and a fixed sidebar layout that collapses on mobile.
+**Depends on**: Phase 3
+**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05
+**Success Criteria** (what must be TRUE):
+  1. Sidebar background is `#003366` with white text; active nav item highlighted with `#0056b3`
+  2. All primary action buttons use `#0056b3` fill with white text; secondary actions use `#007bff` outline variant
+  3. Body text renders in Roboto, section headings in Open Sans — both loaded via `next/font/google` (no FOUT)
+  4. Dashboard is usable on 375px viewport: sidebar collapses to icon rail or hamburger, feed remains scrollable
+  5. Classification badge colors match spec: Liberado=green, Visitante=gray, Atenção=yellow, Suspeito=orange, Crítico=red
+**Plans**: TBD
+**UI hint**: yes
+
 ### Phase 4: Cross-Site Intelligence + WhatsApp Alerts
 **Goal**: When a plate classified as Suspeito or Critico is detected at any obra of the empresa, a full-screen alert fires in the operator dashboard and a WhatsApp message is sent to the configured numbers — with deduplication preventing spam.
 **Depends on**: Phase 3
@@ -128,13 +143,14 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+Phases execute in numeric order: 1 → 2 → 3 → 3.5 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Monorepo + LPR Ingestion + Storage | 4/4 | Complete | 2026-06-20 |
 | 2. Auth + Multi-Tenant Hierarchy | 4/4 | Complete | 2026-06-21 |
-| 3. Real-Time Event Feed + Classification | 4/4 | Complete   | 2026-06-21 |
+| 3. Real-Time Event Feed + Classification | 4/4 | Complete | 2026-06-21 |
+| 3.5. UI Design Polish — Identidade Visual ggtech | 0/TBD | Not started | - |
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 0/TBD | Not started | - |
 | 5. Plate History + Profile | 0/TBD | Not started | - |
 | 6. Reports PDF + Excel with Photos | 0/TBD | Not started | - |

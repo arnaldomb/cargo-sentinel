@@ -62,6 +62,14 @@
 - [x] **REALTIME-06**: Feed pausa auto-scroll quando operador rola manualmente
 - [x] **REALTIME-07**: Indicador de status de cada câmera (online/offline) com timestamp do último evento
 
+### UI — Design Polish e Identidade Visual
+
+- [ ] **UI-01**: Sidebar fixa com fundo `#003366` (ggtech-darkblue), texto branco, item ativo destacado com `#0056b3` — colapsa em rail de ícones em viewport ≤ 768px
+- [ ] **UI-02**: Botões primários com fill `#0056b3`; botões secundários com outline `#007bff`; tamanhos padronizados (sm/md/lg) em todos os formulários e ações
+- [ ] **UI-03**: Tipografia via `next/font/google`: Roboto para corpo de texto, Open Sans para títulos de seção — sem FOUT, sem requisições externas em runtime
+- [ ] **UI-04**: Badges de classificação com cores fixas: Liberado=`#16a34a`, Visitante=`#6b7280`, Atenção=`#ca8a04`, Suspeito=`#ea580c`, Crítico=`#b91c1c` — consistentes entre feed, popover e perfil de placa
+- [ ] **UI-05**: Layout responsivo: dashboard funcional em 375px (mobile), 768px (tablet), 1280px+ (desktop) — sem overflow horizontal em nenhum breakpoint
+
 ### INTELLIGENCE — Inteligência Multisite
 
 - [ ] **INTEL-01**: A cada evento LPR, sistema consulta classificação da placa no nível da empresa (não da obra)
@@ -176,6 +184,11 @@
 | REALTIME-05 | Phase 3 | Complete |
 | REALTIME-06 | Phase 3 | Complete |
 | REALTIME-07 | Phase 3 | Complete |
+| UI-01 | Phase 3.5 | Pending |
+| UI-02 | Phase 3.5 | Pending |
+| UI-03 | Phase 3.5 | Pending |
+| UI-04 | Phase 3.5 | Pending |
+| UI-05 | Phase 3.5 | Pending |
 | INTEL-01 | Phase 4 | Pending |
 | INTEL-02 | Phase 4 | Pending |
 | INTEL-03 | Phase 4 | Pending |
