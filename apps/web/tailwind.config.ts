@@ -14,8 +14,8 @@ const config: Config = {
         'ggtech-lightblue': '#007bff',
       },
       fontFamily: {
-        sans: ['Roboto', 'sans-serif'],
-        heading: ['Open Sans', 'sans-serif'],
+        sans: ['var(--font-roboto)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-open-sans)', 'system-ui', 'sans-serif'],
       },
     },
   },
