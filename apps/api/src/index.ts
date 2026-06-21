@@ -16,6 +16,25 @@ import { protectedPipeline } from './middleware/pipeline';
 import { requireRole } from './middleware/rbac';
 import { createRealtimeServer } from './realtime/server';
 
+// Fail-fast: validar variáveis críticas antes de iniciar (SADMIN-05)
+const REQUIRED_ENV_VARS = [
+  'AUTH_SECRET',
+  'DATABASE_URL',
+  'GARAGE_ACCESS_KEY',
+  'GARAGE_SECRET_KEY',
+  'GARAGE_SERVER_URL',
+  'REDIS_URL',
+] as const;
+
+if (process.env.NODE_ENV !== 'test') {
+  const missing = REQUIRED_ENV_VARS.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    console.error(`[FATAL] Variáveis de ambiente obrigatórias não configuradas: ${missing.join(', ')}`);
+    console.error('O servidor não iniciará sem essas variáveis. Configure o arquivo .env.');
+    process.exit(1);
+  }
+}
+
 export const app: Express = express();
 app.use(
   cors({
