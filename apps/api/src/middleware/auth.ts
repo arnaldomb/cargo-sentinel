@@ -9,12 +9,13 @@ const COOKIE_NAME =
     : 'authjs.session-token';
 
 async function getDerivedKey(secret: string): Promise<Uint8Array> {
+  // Auth.js v5 uses A256CBC-HS512 which requires 64 bytes (512 bits), not 32
   return hkdf(
     'sha256',
     secret,
-    COOKIE_NAME, // salt = nome do cookie (Auth.js v5)
+    COOKIE_NAME, // salt = cookie name (Auth.js v5 convention)
     `Auth.js Generated Encryption Key (${COOKIE_NAME})`,
-    32,
+    64,
   );
 }
 
