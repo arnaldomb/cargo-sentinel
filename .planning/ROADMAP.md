@@ -123,7 +123,11 @@ Plans:
   2. The classification timeline shows every level change with the user who made it and the exact timestamp
   3. Searching by plate number, date range, obra, or camera returns filtered results with no full-table scan (cursor pagination)
   4. A plate with 10,000+ events paginates without timeout or memory error
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 05-01-PLAN.md — Backend Plate Profile API: índice composto + GET /placas/:numero/historico + GET /placas/:numero/classificacoes + GET /eventos/buscar [HISTORY-01, HISTORY-02, HISTORY-03, HISTORY-04]
+- [ ] 05-02-PLAN.md — Página de perfil de placa /placas/[numero]: detecções paginadas + audit trail de classificações + link no feed [HISTORY-01, HISTORY-02]
+- [ ] 05-03-PLAN.md — Página de busca /buscar: formulário cross-filter + tabela cursor-paginada + dropdown dinâmico de câmeras [HISTORY-03, HISTORY-04]
 
 ### Phase 6: Reports PDF + Excel with Photos
 **Goal**: Operators and admins can request a filtered report, continue working while it generates asynchronously, and receive a browser notification when the download link is ready — with photos embedded in both PDF and Excel formats.
@@ -162,6 +166,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.5 → 4 → 5 → 6 → 7
 | 3. Real-Time Event Feed + Classification | 4/4 | Complete | 2026-06-21 |
 | 3.5. UI Design Polish — Identidade Visual ggtech | 3/3 | Complete    | 2026-06-21 |
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 4/4 | Complete    | 2026-06-21 |
-| 5. Plate History + Profile | 0/TBD | Not started | - |
+| 5. Plate History + Profile | 0/3 | Not started | - |
 | 6. Reports PDF + Excel with Photos | 0/TBD | Not started | - |
 | 7. Super Admin Panel + Production Deploy | 0/TBD | Not started | - |
