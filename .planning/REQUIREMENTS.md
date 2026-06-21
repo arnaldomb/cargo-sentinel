@@ -48,8 +48,8 @@
 - [x] **PLACA-02**: Campos: número, empresa transportadora, motorista, tipo veículo, material, classificação (1-5), observação
 - [x] **PLACA-03**: Classificação em 5 níveis: Liberado (1), Visitante (2), Atenção (3), Suspeito (4), Crítico (5)
 - [x] **PLACA-04**: Nova placa detectada automaticamente recebe classificação padrão Visitante (2)
-- [ ] **PLACA-05**: Operador classifica veículo em 1 clique no feed — popover inline sem navegar de página
-- [ ] **PLACA-06**: Confirmação obrigatória para escalar para nível 4 ou 5
+- [x] **PLACA-05**: Operador classifica veículo em 1 clique no feed — popover inline sem navegar de página
+- [x] **PLACA-06**: Confirmação obrigatória para escalar para nível 4 ou 5
 - [x] **PLACA-07**: Mudança de classificação registrada em log de auditoria com usuário e timestamp
 
 ### REALTIME — Painel em Tempo Real
@@ -57,9 +57,9 @@
 - [x] **REALTIME-01**: Socket.IO com rooms por tenant (`empresa:{empresaId}`) — nunca `io.emit()` global
 - [x] **REALTIME-02**: Room join validado por JWT no middleware Socket.IO — `empresaId` do token, nunca do cliente
 - [x] **REALTIME-03**: Feed de eventos mostra: foto thumbnail, placa, obra, câmera, classificação, horário, direção
-- [ ] **REALTIME-04**: Linhas coloridas conforme classificação (verde → vermelho)
+- [x] **REALTIME-04**: Linhas coloridas conforme classificação (verde → vermelho)
 - [x] **REALTIME-05**: Novos eventos aparecem no topo do feed sem reload de página
-- [ ] **REALTIME-06**: Feed pausa auto-scroll quando operador rola manualmente
+- [x] **REALTIME-06**: Feed pausa auto-scroll quando operador rola manualmente
 - [x] **REALTIME-07**: Indicador de status de cada câmera (online/offline) com timestamp do último evento
 
 ### INTELLIGENCE — Inteligência Multisite
@@ -166,15 +166,15 @@
 | PLACA-02 | Phase 3 | Complete |
 | PLACA-03 | Phase 3 | Complete |
 | PLACA-04 | Phase 3 | Complete |
-| PLACA-05 | Phase 3 | Pending |
-| PLACA-06 | Phase 3 | Pending |
+| PLACA-05 | Phase 3 | Complete |
+| PLACA-06 | Phase 3 | Complete |
 | PLACA-07 | Phase 3 | Complete |
 | REALTIME-01 | Phase 3 | Complete |
 | REALTIME-02 | Phase 3 | Complete |
 | REALTIME-03 | Phase 3 | Complete |
-| REALTIME-04 | Phase 3 | Pending |
+| REALTIME-04 | Phase 3 | Complete |
 | REALTIME-05 | Phase 3 | Complete |
-| REALTIME-06 | Phase 3 | Pending |
+| REALTIME-06 | Phase 3 | Complete |
 | REALTIME-07 | Phase 3 | Complete |
 | INTEL-01 | Phase 4 | Pending |
 | INTEL-02 | Phase 4 | Pending |

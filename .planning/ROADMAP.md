@@ -17,7 +17,7 @@ then async reports (Phase 6), and finally the Super Admin panel and production d
 
 - [x] **Phase 1: Monorepo + LPR Ingestion + Storage** - Foundation scaffold, camera webhook, Garage image storage
 - [x] **Phase 2: Auth + Multi-Tenant Hierarchy** - JWT auth with 3 roles and full Empresa > Obra > Camera data model
-- [ ] **Phase 3: Real-Time Event Feed + Vehicle Classification** - Live operator dashboard and 5-level plate classification
+- [x] **Phase 3: Real-Time Event Feed + Vehicle Classification** - Live operator dashboard and 5-level plate classification (completed 2026-06-21)
 - [ ] **Phase 4: Cross-Site Intelligence + WhatsApp Alerts** - Multi-site threat correlation and async WhatsApp notifications
 - [ ] **Phase 5: Plate History + Profile** - Full plate timeline, cross-site search, and audit trail
 - [ ] **Phase 6: Reports PDF + Excel with Photos** - Async filtered reports with embedded thumbnails
@@ -74,7 +74,7 @@ Plans:
 - [x] 03-01-PLAN.md — `Placa` + auditoria + endpoint de reclassificação [PLACA-01, PLACA-02, PLACA-03, PLACA-04, PLACA-07]
 - [x] 03-02-PLAN.md — Socket.IO + auth JWE + rooms por tenant [REALTIME-01, REALTIME-02]
 - [x] 03-03-PLAN.md — Feed REST + status de câmeras + emissão realtime [REALTIME-03, REALTIME-05, REALTIME-07]
-- [ ] 03-04-PLAN.md — Dashboard web + classificação inline + confirmação crítica [PLACA-05, PLACA-06, REALTIME-04, REALTIME-06]
+- [x] 03-04-PLAN.md — Dashboard web + classificação inline + confirmação crítica [PLACA-05, PLACA-06, REALTIME-04, REALTIME-06]
 **UI hint**: yes
 
 ### Phase 4: Cross-Site Intelligence + WhatsApp Alerts
@@ -134,7 +134,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Monorepo + LPR Ingestion + Storage | 4/4 | Complete | 2026-06-20 |
 | 2. Auth + Multi-Tenant Hierarchy | 4/4 | Complete | 2026-06-21 |
-| 3. Real-Time Event Feed + Classification | 3/4 | In Progress|  |
+| 3. Real-Time Event Feed + Classification | 4/4 | Complete   | 2026-06-21 |
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 0/TBD | Not started | - |
 | 5. Plate History + Profile | 0/TBD | Not started | - |
 | 6. Reports PDF + Excel with Photos | 0/TBD | Not started | - |
