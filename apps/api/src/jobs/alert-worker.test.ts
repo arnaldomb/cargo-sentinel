@@ -48,9 +48,9 @@ describe('checkAndSetDedup', () => {
     expect(mockRedis.set).toHaveBeenCalledWith(
       'alert:dedup:emp-1:ABC1234',
       '1',
-      'NX',
       'EX',
       300, // SUSPEITO TTL
+      'NX',
     );
   });
 
@@ -66,9 +66,9 @@ describe('checkAndSetDedup', () => {
     expect(mockRedis.set).toHaveBeenCalledWith(
       'alert:dedup:emp-1:ABC1234',
       '1',
-      'NX',
       'EX',
       900, // CRITICO TTL
+      'NX',
     );
   });
 });

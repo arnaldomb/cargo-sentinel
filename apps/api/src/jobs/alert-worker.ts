@@ -48,8 +48,9 @@ export async function checkAndSetDedup(
 ): Promise<boolean> {
   const key = `alert:dedup:${empresaId}:${placa}`;
   const ttl = DEDUP_TTL[classificacao];
-  // SET key value NX EX ttl — retorna "OK" se setou, null se já existia
-  const result = await redis.set(key, '1', 'NX', 'EX', ttl);
+  // SET key value EX ttl NX — retorna "OK" se setou, null se já existia
+  // ioredis exige ordem: EX antes de NX
+  const result = await redis.set(key, '1', 'EX', ttl, 'NX');
   return result === 'OK';
 }
 

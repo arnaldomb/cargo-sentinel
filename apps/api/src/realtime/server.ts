@@ -1,6 +1,7 @@
 import type { Server as HttpServer } from 'http';
 import { Server, type Socket } from 'socket.io';
 import { authenticateSocket, type RealtimeUser } from './auth';
+import type { CrossSiteAlertDTO } from './dto';
 
 type SocketWithUser = Pick<Socket, 'data' | 'join'> & {
   data: {
@@ -27,7 +28,7 @@ export function handleRealtimeConnection(socket: SocketWithUser): void {
 export function emitToEmpresa(
   io: IoLike,
   empresaId: string,
-  event: 'feed:evento-novo' | 'feed:placa-classificada' | 'feed:camera-status',
+  event: 'feed:evento-novo' | 'feed:placa-classificada' | 'feed:camera-status' | 'feed:alerta-cross-site',
   payload: unknown,
 ): void {
   io.to(buildEmpresaRoom(empresaId)).emit(event, payload);
@@ -76,10 +77,10 @@ export function emitCameraStatus(empresaId: string, payload: unknown): void {
 }
 
 /**
- * Emite alerta cross-site para todos os operadores da empresa.
- * Stub ampliado em Plan 04-03 com o tipo CrossSiteAlertPayload completo.
- * INTEL-04: broadcast para sala empresa:{empresaId}
+ * Emits a cross-site alert to all operators of the empresa.
+ * INTEL-04: always room-scoped — never io.emit() global.
+ * INTEL-03: payload includes plate, classification, detected obra, and original obra.
  */
-export function emitAlertaCrossSite(empresaId: string, payload: unknown): void {
+export function emitAlertaCrossSite(empresaId: string, payload: CrossSiteAlertDTO): void {
   emitToEmpresa(getRealtimeServer(), empresaId, 'feed:alerta-cross-site', payload);
 }

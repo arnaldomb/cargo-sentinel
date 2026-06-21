@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { buildEmpresaRoom, emitToEmpresa, handleRealtimeConnection } from './server';
+import type { CrossSiteAlertDTO } from './dto';
 
 describe('realtime server helpers', () => {
   it('monta a room por tenant no formato empresa:{empresaId}', () => {
@@ -85,5 +86,52 @@ describe('realtime server helpers', () => {
 
     expect(to).not.toHaveBeenCalledWith('empresa:emp-2');
     expect(to).toHaveBeenCalledWith('empresa:emp-1');
+  });
+});
+
+describe('emitAlertaCrossSite via emitToEmpresa', () => {
+  it('emite feed:alerta-cross-site para a room empresa:{empresaId}', () => {
+    const emit = vi.fn();
+    const to = vi.fn().mockReturnValue({ emit });
+
+    const payload: CrossSiteAlertDTO = {
+      empresaId: 'emp-1',
+      placaNumero: 'ABC1234',
+      classificacao: 'SUSPEITO',
+      obraDetectadaId: 'obra-b',
+      obraDetectadaNome: 'Obra B',
+      obraClassificacaoId: 'obra-a',
+      obraClassificacaoNome: 'Obra A',
+      eventoId: 'evt-1',
+      timestamp: new Date().toISOString(),
+    };
+
+    emitToEmpresa({ to }, 'emp-1', 'feed:alerta-cross-site', payload);
+
+    expect(to).toHaveBeenCalledWith('empresa:emp-1');
+    expect(emit).toHaveBeenCalledWith('feed:alerta-cross-site', payload);
+  });
+
+  it('nunca emite para room de outra empresa ao disparar alerta cross-site', () => {
+    const emit = vi.fn();
+    const to = vi.fn().mockReturnValue({ emit });
+
+    const payload: CrossSiteAlertDTO = {
+      empresaId: 'emp-x',
+      placaNumero: 'XYZ9999',
+      classificacao: 'CRITICO',
+      obraDetectadaId: 'obra-c',
+      obraDetectadaNome: 'Obra C',
+      obraClassificacaoId: 'obra-d',
+      obraClassificacaoNome: 'Obra D',
+      eventoId: 'evt-2',
+      timestamp: '2026-06-21T10:00:00.000Z',
+    };
+
+    emitToEmpresa({ to }, 'emp-x', 'feed:alerta-cross-site', payload);
+
+    expect(to).toHaveBeenCalledWith('empresa:emp-x');
+    expect(to).not.toHaveBeenCalledWith('empresa:emp-y');
+    expect(emit).toHaveBeenCalledWith('feed:alerta-cross-site', payload);
   });
 });
