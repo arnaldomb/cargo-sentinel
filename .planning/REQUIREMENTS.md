@@ -26,12 +26,12 @@
 
 ### AUTH — Autenticação e Autorização
 
-- [ ] **AUTH-01**: Usuário pode fazer login com email/senha
-- [ ] **AUTH-02**: JWT contém `{ sub, empresaId, role, iat, exp }` — Super Admin tem `empresaId: null` explícito
+- [x] **AUTH-01**: Usuário pode fazer login com email/senha
+- [x] **AUTH-02**: JWT contém `{ sub, empresaId, role, iat, exp }` — Super Admin tem `empresaId: null` explícito
 - [ ] **AUTH-03**: Três roles: `SUPER_ADMIN`, `ADMIN_EMPRESA`, `OPERADOR` com permissões distintas
-- [ ] **AUTH-04**: Token de acesso com TTL 15 min — refresh token em cookie httpOnly
+- [x] **AUTH-04**: Token de acesso com TTL 15 min — refresh token em cookie httpOnly
 - [ ] **AUTH-05**: Middleware Express valida JWT e injeta `req.tenantClient = createTenantClient(prisma, req.user.empresaId)`
-- [ ] **AUTH-06**: Usuário pode fazer logout de qualquer página
+- [x] **AUTH-06**: Usuário pode fazer logout de qualquer página
 
 ### TENANT — Hierarquia Multi-Tenant
 
@@ -150,12 +150,12 @@
 | STORAGE-01 | Phase 1 | Pending |
 | STORAGE-02 | Phase 1 | Pending |
 | STORAGE-03 | Phase 1 | Pending |
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Complete |
+| AUTH-02 | Phase 2 | Complete |
 | AUTH-03 | Phase 2 | Pending |
-| AUTH-04 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Complete |
 | AUTH-05 | Phase 2 | Pending |
-| AUTH-06 | Phase 2 | Pending |
+| AUTH-06 | Phase 2 | Complete |
 | TENANT-01 | Phase 2 | Pending |
 | TENANT-02 | Phase 2 | Pending |
 | TENANT-03 | Phase 2 | Pending |
