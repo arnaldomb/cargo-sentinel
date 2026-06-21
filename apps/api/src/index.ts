@@ -1,12 +1,24 @@
+import { createServer } from 'http';
 import express, { type Express } from 'express';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import helmet from 'helmet';
 import lprRouter from './routes/lpr';
 import obrasRouter from './routes/obras';
 import camerasRouter from './routes/cameras';
+import placasRouter from './routes/placas';
+import eventosRouter from './routes/eventos';
+import cameraStatusRouter from './routes/camera-status';
 import { protectedPipeline } from './middleware/pipeline';
+import { createRealtimeServer } from './realtime/server';
 
 export const app: Express = express();
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
 app.use(helmet());
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
@@ -21,10 +33,16 @@ app.use('/api/lpr', lprRouter);
 app.use('/api/obras', ...protectedPipeline, obrasRouter);
 // camerasRouter usa mergeParams: true para herdar :obraId do parent
 app.use('/api/obras/:obraId/cameras', ...protectedPipeline, camerasRouter);
+app.use('/api/placas', ...protectedPipeline, placasRouter);
+app.use('/api/eventos', ...protectedPipeline, eventosRouter);
+app.use('/api/cameras', ...protectedPipeline, cameraStatusRouter);
+
+export const httpServer = createServer(app);
+export const io = createRealtimeServer(httpServer);
 
 const PORT = Number(process.env.PORT ?? 4000);
 if (process.env.NODE_ENV !== 'test') {
   // Only start the BullMQ worker outside of tests to avoid opening Redis connections
   import('./jobs/worker');
-  app.listen(PORT, () => console.log(`api listening on ${PORT}`));
+  httpServer.listen(PORT, () => console.log(`api listening on ${PORT}`));
 }
