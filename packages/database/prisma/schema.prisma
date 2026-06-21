@@ -156,6 +156,8 @@ model Evento {
   @@index([placaId])
   @@index([obraId, timestamp])
   @@index([cameraId])
+  // HISTORY-04: keyset pagination sem full-table scan para histórico de placa
+  @@index([empresaId, placaId, timestamp(sort: Desc)])
 }
 
 // ============================================================
