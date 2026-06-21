@@ -25,3 +25,18 @@ export const alertQueue = new Queue('alert-jobs', {
     backoff: { type: 'exponential', delay: 2000 },
   },
 });
+
+/**
+ * BullMQ queue for async report generation (REPORTS-01).
+ * Separate from lpr and alert queues — concurrency 2 in report-worker.
+ * Uses its own Redis connection (Pitfall 5: Queue and Worker need separate connections).
+ */
+export const reportQueue = new Queue('report-jobs', {
+  connection: createRedisConnection(),
+  defaultJobOptions: {
+    attempts: 2,
+    backoff: { type: 'exponential', delay: 3000 },
+    removeOnComplete: { age: 3600 }, // limpar jobs concluídos após 1h
+    removeOnFail: { age: 86400 },    // manter jobs com falha por 24h para debug
+  },
+});

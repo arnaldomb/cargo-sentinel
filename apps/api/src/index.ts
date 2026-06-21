@@ -47,6 +47,7 @@ const PORT = Number(process.env.PORT ?? 4000);
 if (process.env.NODE_ENV !== 'test') {
   // Only start the BullMQ workers outside of tests to avoid opening Redis connections
   import('./jobs/worker');
-  import('./jobs/alert-worker'); // ALERTS-03: alert worker registers with concurrency 1
+  import('./jobs/alert-worker');   // ALERTS-03: alert worker registers with concurrency 1
+  import('./jobs/report-worker'); // REPORTS-01: report worker stub, concurrency 2
   httpServer.listen(PORT, () => console.log(`api listening on ${PORT}`));
 }
