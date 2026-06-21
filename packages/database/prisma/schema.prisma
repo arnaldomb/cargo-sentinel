@@ -24,6 +24,12 @@ enum EmpresaStatus {
   SUSPENSO
 }
 
+enum Role {
+  SUPER_ADMIN
+  ADMIN_EMPRESA
+  OPERADOR
+}
+
 model Empresa {
   id        String        @id @default(cuid())
   nome      String
@@ -33,6 +39,22 @@ model Empresa {
   obras     Obra[]
   cameras   Camera[]
   eventos   Evento[]
+  users     User[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  nome         String
+  role         Role     @default(OPERADOR)
+  empresaId    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  empresa      Empresa? @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId])
+  @@index([email])
 }
 
 model Obra {
