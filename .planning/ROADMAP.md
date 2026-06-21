@@ -19,7 +19,7 @@ with something a human can verify in a browser or terminal.
 - [x] **Phase 1: Monorepo + LPR Ingestion + Storage** - Foundation scaffold, camera webhook, Garage image storage
 - [x] **Phase 2: Auth + Multi-Tenant Hierarchy** - JWT auth with 3 roles and full Empresa > Obra > Camera data model
 - [x] **Phase 3: Real-Time Event Feed + Vehicle Classification** - Live operator dashboard and 5-level plate classification (completed 2026-06-21)
-- [ ] **Phase 3.5: UI Design Polish — Identidade Visual ggtech** - Apply ggtech brand colors, typography, and consistent component library across all screens
+- [x] **Phase 3.5: UI Design Polish — Identidade Visual ggtech** - Apply ggtech brand colors, typography, and consistent component library across all screens (completed 2026-06-21)
 - [ ] **Phase 4: Cross-Site Intelligence + WhatsApp Alerts** - Multi-site threat correlation and async WhatsApp notifications
 - [ ] **Phase 5: Plate History + Profile** - Full plate timeline, cross-site search, and audit trail
 - [ ] **Phase 6: Reports PDF + Excel with Photos** - Async filtered reports with embedded thumbnails
@@ -91,9 +91,9 @@ Plans:
   5. Classification badge colors match spec: Liberado=green, Visitante=gray, Atenção=yellow, Suspeito=orange, Crítico=red
 **Plans**: 3 plans
 Plans:
-- [ ] 03.5-01-PLAN.md — Design tokens + typography: next/font/google para Roboto + Open Sans, variáveis CSS no layout raiz [UI-02, UI-03]
-- [ ] 03.5-02-PLAN.md — Sidebar responsiva + layout wrapper: drawer mobile com hamburger, colapso em lg, sem overflow-x [UI-01, UI-05]
-- [ ] 03.5-03-PLAN.md — Component polish: cores de badge corrigidas (spec UI-04), botões e inputs de login com tokens Tailwind [UI-02, UI-04]
+- [x] 03.5-01-PLAN.md — Design tokens + typography: next/font/google para Roboto + Open Sans, variáveis CSS no layout raiz [UI-02, UI-03]
+- [x] 03.5-02-PLAN.md — Sidebar responsiva + layout wrapper: drawer mobile com hamburger, colapso em lg, sem overflow-x [UI-01, UI-05]
+- [x] 03.5-03-PLAN.md — Component polish: cores de badge corrigidas (spec UI-04), botões e inputs de login com tokens Tailwind [UI-02, UI-04]
 **UI hint**: yes
 
 ### Phase 4: Cross-Site Intelligence + WhatsApp Alerts
@@ -154,7 +154,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.5 → 4 → 5 → 6 → 7
 | 1. Monorepo + LPR Ingestion + Storage | 4/4 | Complete | 2026-06-20 |
 | 2. Auth + Multi-Tenant Hierarchy | 4/4 | Complete | 2026-06-21 |
 | 3. Real-Time Event Feed + Classification | 4/4 | Complete | 2026-06-21 |
-| 3.5. UI Design Polish — Identidade Visual ggtech | 0/3 | Not started | - |
+| 3.5. UI Design Polish — Identidade Visual ggtech | 3/3 | Complete    | 2026-06-21 |
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 0/TBD | Not started | - |
 | 5. Plate History + Profile | 0/TBD | Not started | - |
 | 6. Reports PDF + Excel with Photos | 0/TBD | Not started | - |
