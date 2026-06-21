@@ -119,13 +119,14 @@ services:
       - "traefik.http.services.api.loadbalancer.server.port=4000"
 
   # ============================================================
-  # evolution-api — WhatsApp messaging via Evolution API v2.3.7
-  # HARD-PINNED: v2.3.7 — DO NOT upgrade to 2.4.0+ (requires
-  # external license server activation — breaks self-hosted SLAs)
+  # evolution-api — WhatsApp messaging via Evolution API v2.2.3
+  # HARD-PINNED: v2.2.3 — highest stable v2 tag on Docker Hub (2025-02-03).
+  # DO NOT upgrade to v2.4.0+ (requires external license server activation
+  # — breaks self-hosted SLAs). v2.3.7 tag does not exist in atendai registry.
   # ALERTS-01: internal only, not exposed via Traefik
   # ============================================================
   evolution-api:
-    image: atendai/evolution-api:2.3.7
+    image: atendai/evolution-api:v2.2.3
     restart: unless-stopped
     environment:
       SERVER_URL: ${EVOLUTION_SERVER_URL:-http://evolution-api:8080}
