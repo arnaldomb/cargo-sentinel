@@ -2,8 +2,9 @@ import express, { type Express } from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import lprRouter from './routes/lpr';
-import { authMiddleware } from './middleware/auth';
-import { tenantMiddleware } from './middleware/tenant';
+import obrasRouter from './routes/obras';
+import camerasRouter from './routes/cameras';
+import { protectedPipeline } from './middleware/pipeline';
 
 export const app: Express = express();
 app.use(helmet());
@@ -15,11 +16,11 @@ app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok' }));
 // Webhook da câmera — PÚBLICO (sem auth; câmera não tem token — Phase 1 não quebrada)
 app.use('/api/lpr', lprRouter);
 
-// Pipeline de proteção reutilizável (ordem: auth → tenant — Pitfall 5)
-// Plan 04 usa: router.use(protectedPipeline) antes das rotas CRUD
-export const protectedPipeline = [authMiddleware, tenantMiddleware];
-
-// (rotas protegidas Obra/Camera montadas no Plan 04 usando protectedPipeline)
+// Rotas protegidas de Obras e Câmeras (TENANT-05, TENANT-06)
+// protectedPipeline = [authMiddleware, tenantMiddleware] — importado de middleware/pipeline (sem ciclo)
+app.use('/api/obras', ...protectedPipeline, obrasRouter);
+// camerasRouter usa mergeParams: true para herdar :obraId do parent
+app.use('/api/obras/:obraId/cameras', ...protectedPipeline, camerasRouter);
 
 const PORT = Number(process.env.PORT ?? 4000);
 if (process.env.NODE_ENV !== 'test') {
