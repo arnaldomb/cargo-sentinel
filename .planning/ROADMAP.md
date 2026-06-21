@@ -72,7 +72,7 @@ Plans:
 **Plans**: 4 plans
 Plans:
 - [x] 03-01-PLAN.md — `Placa` + auditoria + endpoint de reclassificação [PLACA-01, PLACA-02, PLACA-03, PLACA-04, PLACA-07]
-- [ ] 03-02-PLAN.md — Socket.IO + auth JWE + rooms por tenant [REALTIME-01, REALTIME-02]
+- [x] 03-02-PLAN.md — Socket.IO + auth JWE + rooms por tenant [REALTIME-01, REALTIME-02]
 - [ ] 03-03-PLAN.md — Feed REST + status de câmeras + emissão realtime [REALTIME-03, REALTIME-05, REALTIME-07]
 - [ ] 03-04-PLAN.md — Dashboard web + classificação inline + confirmação crítica [PLACA-05, PLACA-06, REALTIME-04, REALTIME-06]
 **UI hint**: yes
@@ -134,7 +134,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Monorepo + LPR Ingestion + Storage | 4/4 | Complete | 2026-06-20 |
 | 2. Auth + Multi-Tenant Hierarchy | 4/4 | Complete | 2026-06-21 |
-| 3. Real-Time Event Feed + Classification | 1/4 | In Progress|  |
+| 3. Real-Time Event Feed + Classification | 2/4 | In Progress|  |
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 0/TBD | Not started | - |
 | 5. Plate History + Profile | 0/TBD | Not started | - |
 | 6. Reports PDF + Excel with Photos | 0/TBD | Not started | - |

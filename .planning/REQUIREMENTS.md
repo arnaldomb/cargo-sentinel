@@ -54,8 +54,8 @@
 
 ### REALTIME — Painel em Tempo Real
 
-- [ ] **REALTIME-01**: Socket.IO com rooms por tenant (`empresa:{empresaId}`) — nunca `io.emit()` global
-- [ ] **REALTIME-02**: Room join validado por JWT no middleware Socket.IO — `empresaId` do token, nunca do cliente
+- [x] **REALTIME-01**: Socket.IO com rooms por tenant (`empresa:{empresaId}`) — nunca `io.emit()` global
+- [x] **REALTIME-02**: Room join validado por JWT no middleware Socket.IO — `empresaId` do token, nunca do cliente
 - [ ] **REALTIME-03**: Feed de eventos mostra: foto thumbnail, placa, obra, câmera, classificação, horário, direção
 - [ ] **REALTIME-04**: Linhas coloridas conforme classificação (verde → vermelho)
 - [ ] **REALTIME-05**: Novos eventos aparecem no topo do feed sem reload de página
@@ -169,8 +169,8 @@
 | PLACA-05 | Phase 3 | Pending |
 | PLACA-06 | Phase 3 | Pending |
 | PLACA-07 | Phase 3 | Complete |
-| REALTIME-01 | Phase 3 | Pending |
-| REALTIME-02 | Phase 3 | Pending |
+| REALTIME-01 | Phase 3 | Complete |
+| REALTIME-02 | Phase 3 | Complete |
 | REALTIME-03 | Phase 3 | Pending |
 | REALTIME-04 | Phase 3 | Pending |
 | REALTIME-05 | Phase 3 | Pending |
