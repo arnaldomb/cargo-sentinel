@@ -67,15 +67,13 @@ Empresa (tenant)
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Receber eventos LPR via POST /NotificationInfo/:action com foto base64 — Validated in Phase 01: Monorepo LPR Ingestion
+- [x] Armazenar fotos em Garage S3-compat com referência no banco — Validated in Phase 01
+- [x] Autenticação JWT com 3 roles (super admin, admin, operador) — Validated in Phase 02: Auth.js v5 JWT sessions
+- [x] Multi-tenancy: cada empresa isolada no mesmo banco via tenantClient — Validated in Phase 02
+- [x] Hierarquia: Empresa > Obra > Câmera com CRUD protegido por RBAC — Validated in Phase 02
 
 ### Active
-
-- [ ] Receber eventos LPR via POST /NotificationInfo/:action com foto base64
-- [ ] Armazenar fotos em MinIO com referência no banco
-- [ ] Autenticação JWT com 3 roles (super admin, admin, operador)
-- [ ] Multi-tenancy: cada empresa isolada no mesmo banco (row-level)
-- [ ] Hierarquia: Empresa > Obra > Câmera
 - [ ] Classificação de veículos em 5 níveis com 1 clique
 - [ ] Inteligência multisite: alerta quando placa suspeita aparece em outra obra
 - [ ] Painel ao vivo com eventos em tempo real via WebSocket
@@ -115,4 +113,4 @@ Este documento evolui em transições de fase e marcos de milestone.
 4. Decisões a registrar? → Adicionar em Key Decisions
 
 ---
-*Last updated: 2026-06-20 após inicialização*
+*Last updated: 2026-06-20 — Phase 02 complete (Auth + Multi-tenant)*
