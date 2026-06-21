@@ -1,7 +1,66 @@
+# ============================================================
+# docker-compose.override.yml — local dev environment
+# Auto-merged by `docker compose up`
+# Production: use docker-compose.yml only (no override).
+# ============================================================
+
 services:
+  # Direct port access for local dev tools (DBeaver, Redis Insight, etc.)
   postgres:
-    ports:
-      - "5432:5432"
+    ports: ["5432:5432"]
+
   redis:
+    ports: ["6379:6379"]
+
+  garage:
     ports:
-      - "6379:6379"
+      - "3900:3900"   # S3 API
+      - "3903:3903"   # Garage admin API
+
+  # Expose app services directly (bypass Traefik for local dev)
+  api:
+    ports: ["4000:4000"]
+
+  web:
+    ports: ["3000:3000"]
+    environment:
+      NEXTAUTH_URL: "http://localhost:3000"
+      AUTH_URL: "http://localhost:3000"
+      AUTH_TRUST_HOST: "true"
+
+  # ============================================================
+  # migrate — one-shot: db push + seed (restarts: no)
+  # Runs after postgres is healthy, before app services are used.
+  # Re-running is idempotent (db push skips existing schema).
+  # ============================================================
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: builder
+    command: >
+      sh -c "
+        pnpm --filter @cargo-sentinel/database run db:push &&
+        pnpm --filter @cargo-sentinel/database run seed
+      "
+    env_file: .env
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel}@postgres:5432/${POSTGRES_DB:-cargo_sentinel}?schema=public"
+      AUTH_SECRET: "${AUTH_SECRET}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sentinel
+    restart: "no"
+
+  # Dev Traefik: HTTP only, no TLS, no Let's Encrypt
+  # Web still accessible at localhost:3000 and localhost/
+  # API still accessible at localhost:4000 and localhost/api
+  traefik:
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
