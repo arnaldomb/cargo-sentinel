@@ -89,7 +89,11 @@ Plans:
   3. Body text renders in Roboto, section headings in Open Sans — both loaded via `next/font/google` (no FOUT)
   4. Dashboard is usable on 375px viewport: sidebar collapses to icon rail or hamburger, feed remains scrollable
   5. Classification badge colors match spec: Liberado=green, Visitante=gray, Atenção=yellow, Suspeito=orange, Crítico=red
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 03.5-01-PLAN.md — Design tokens + typography: next/font/google para Roboto + Open Sans, variáveis CSS no layout raiz [UI-02, UI-03]
+- [ ] 03.5-02-PLAN.md — Sidebar responsiva + layout wrapper: drawer mobile com hamburger, colapso em lg, sem overflow-x [UI-01, UI-05]
+- [ ] 03.5-03-PLAN.md — Component polish: cores de badge corrigidas (spec UI-04), botões e inputs de login com tokens Tailwind [UI-02, UI-04]
 **UI hint**: yes
 
 ### Phase 4: Cross-Site Intelligence + WhatsApp Alerts
@@ -150,7 +154,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 3.5 → 4 → 5 → 6 → 7
 | 1. Monorepo + LPR Ingestion + Storage | 4/4 | Complete | 2026-06-20 |
 | 2. Auth + Multi-Tenant Hierarchy | 4/4 | Complete | 2026-06-21 |
 | 3. Real-Time Event Feed + Classification | 4/4 | Complete | 2026-06-21 |
-| 3.5. UI Design Polish — Identidade Visual ggtech | 0/TBD | Not started | - |
+| 3.5. UI Design Polish — Identidade Visual ggtech | 0/3 | Not started | - |
 | 4. Cross-Site Intelligence + WhatsApp Alerts | 0/TBD | Not started | - |
 | 5. Plate History + Profile | 0/TBD | Not started | - |
 | 6. Reports PDF + Excel with Photos | 0/TBD | Not started | - |
