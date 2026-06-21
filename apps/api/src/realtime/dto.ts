@@ -73,6 +73,17 @@ export type CrossSiteAlertDTO = {
   timestamp: string;
 };
 
+/**
+ * DTO emitido via Socket.IO quando relatório async fica pronto.
+ * REPORTS-06: WebSocket notification quando arquivo está pronto para download.
+ */
+export type RelatorioProntoDTO = {
+  relatorioId: string;
+  formato: 'PDF' | 'XLSX';
+  downloadUrl: string;   // presigned URL 1h (REPORTS-07)
+  expiresAt: string;     // ISO string de validade
+};
+
 const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 
 /**
