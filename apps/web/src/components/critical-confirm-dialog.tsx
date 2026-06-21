@@ -48,7 +48,7 @@ export function CriticalConfirmDialog({
         <div className="mb-4 flex items-start gap-3">
           <span
             className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold text-white ${
-              isCritico ? 'bg-red-700' : 'bg-orange-500'
+              isCritico ? 'bg-red-700' : 'bg-orange-600'
             }`}
             aria-hidden="true"
           >
@@ -92,7 +92,7 @@ export function CriticalConfirmDialog({
           <button
             onClick={onConfirm}
             className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 ${
-              isCritico ? 'bg-red-700' : 'bg-orange-500'
+              isCritico ? 'bg-red-700' : 'bg-orange-600'
             }`}
             data-testid="confirm-dialog-confirm"
           >
