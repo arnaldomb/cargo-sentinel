@@ -56,6 +56,23 @@ export function eventoToFeedItem(
   };
 }
 
+/**
+ * DTO for cross-site alert events emitted via Socket.IO.
+ * INTEL-03: payload must include plate, classification, detected obra, and original obra.
+ * Consumed by frontend dashboard-client.tsx for overlay rendering (Plan 04-04).
+ */
+export type CrossSiteAlertDTO = {
+  empresaId: string;
+  placaNumero: string;
+  classificacao: 'SUSPEITO' | 'CRITICO';
+  obraDetectadaId: string;
+  obraDetectadaNome: string;
+  obraClassificacaoId: string;
+  obraClassificacaoNome: string;
+  eventoId: string;
+  timestamp: string;
+};
+
 const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 
 /**

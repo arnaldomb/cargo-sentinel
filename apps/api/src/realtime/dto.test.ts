@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { eventoToFeedItem, calcCameraStatus } from './dto';
+import { eventoToFeedItem, calcCameraStatus, type CrossSiteAlertDTO } from './dto';
 
 const sampleCamera = {
   id: 'cam1',
@@ -80,5 +80,47 @@ describe('calcCameraStatus', () => {
     const result = calcCameraStatus(sampleCamera, ultimoEvento, now);
 
     expect(result.status).toBe('online');
+  });
+});
+
+describe('CrossSiteAlertDTO', () => {
+  it('aceita objeto com todos os campos obrigatórios de alerta cross-site', () => {
+    const payload: CrossSiteAlertDTO = {
+      empresaId: 'emp-1',
+      placaNumero: 'ABC1234',
+      classificacao: 'SUSPEITO',
+      obraDetectadaId: 'obra-b',
+      obraDetectadaNome: 'Obra B - Centro',
+      obraClassificacaoId: 'obra-a',
+      obraClassificacaoNome: 'Obra A - Norte',
+      eventoId: 'evt-xyz',
+      timestamp: new Date().toISOString(),
+    };
+
+    expect(payload.empresaId).toBe('emp-1');
+    expect(payload.placaNumero).toBe('ABC1234');
+    expect(payload.classificacao).toBe('SUSPEITO');
+    expect(payload.obraDetectadaId).toBe('obra-b');
+    expect(payload.obraDetectadaNome).toBe('Obra B - Centro');
+    expect(payload.obraClassificacaoId).toBe('obra-a');
+    expect(payload.obraClassificacaoNome).toBe('Obra A - Norte');
+    expect(payload.eventoId).toBe('evt-xyz');
+    expect(typeof payload.timestamp).toBe('string');
+  });
+
+  it('aceita classificacao CRITICO', () => {
+    const payload: CrossSiteAlertDTO = {
+      empresaId: 'emp-2',
+      placaNumero: 'XYZ9999',
+      classificacao: 'CRITICO',
+      obraDetectadaId: 'obra-c',
+      obraDetectadaNome: 'Obra C',
+      obraClassificacaoId: 'obra-d',
+      obraClassificacaoNome: 'Obra D',
+      eventoId: 'evt-abc',
+      timestamp: '2026-06-21T10:00:00.000Z',
+    };
+
+    expect(payload.classificacao).toBe('CRITICO');
   });
 });
