@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Menu } from 'lucide-react';
 import { io, type Socket } from 'socket.io-client';
 import {
   getClassificationColor,
@@ -16,6 +17,7 @@ import {
 import { ClassificationBadge } from './classification-badge';
 import { ClassificationPopover } from './classification-popover';
 import { CriticalConfirmDialog } from './critical-confirm-dialog';
+import { Sidebar } from './sidebar';
 
 type DashboardClientProps = {
   userName: string;
@@ -29,6 +31,7 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [activePlacaId, setActivePlacaId] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Critical confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -162,52 +165,32 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
   return (
     <>
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar — camera status list */}
-        <aside className="flex w-72 flex-shrink-0 flex-col overflow-y-auto bg-ggtech-darkblue p-4">
-          <div className="mb-4">
-            <h2 className="font-heading text-base font-semibold text-white">Câmeras LPR</h2>
-            <p className="mt-1 text-xs text-blue-300">
-              {userName} · {userRole}
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            {cameras.length === 0 && (
-              <p className="text-xs text-blue-300">Nenhuma câmera registrada.</p>
-            )}
-            {cameras.map((camera) => (
-              <div
-                key={camera.id}
-                className="rounded-lg bg-white/10 p-3 text-white backdrop-blur-sm"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <strong className="text-sm font-semibold">{camera.codigoLpr}</strong>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium text-white ${
-                      camera.status === 'online' ? 'bg-green-600' : 'bg-slate-500'
-                    }`}
-                  >
-                    {camera.status}
-                  </span>
-                </div>
-                <div className="mt-1 text-xs text-blue-200">{camera.obra.nome}</div>
-                <div className="mt-1 text-xs text-blue-300">
-                  Último:{' '}
-                  {camera.ultimoEventoEm
-                    ? new Date(camera.ultimoEventoEm).toLocaleString('pt-BR')
-                    : 'nunca'}
-                </div>
-              </div>
-            ))}
-          </div>
-        </aside>
+        {/* Sidebar com câmeras — responsiva (drawer no mobile) */}
+        <Sidebar
+          cameras={cameras}
+          userName={userName}
+          userRole={userRole}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
 
         {/* Main — live event feed */}
         <main className="flex flex-1 flex-col overflow-hidden p-4">
           <div className="mb-3 flex items-center justify-between">
-            <div>
-              <h2 className="font-heading text-lg font-bold text-slate-900">Feed Operacional</h2>
-              <p className="text-sm text-slate-500">Eventos ao vivo com classificação inline.</p>
+            <div className="flex items-center gap-3">
+              {/* Botão hamburger — visível apenas em mobile (lg:hidden) */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden"
+                aria-label="Abrir menu de câmeras"
+                data-testid="hamburger-btn"
+              >
+                <Menu size={20} />
+              </button>
+              <div>
+                <h2 className="font-heading text-lg font-bold text-slate-900">Feed Operacional</h2>
+                <p className="text-sm text-slate-500">Eventos ao vivo com classificação inline.</p>
+              </div>
             </div>
 
             {pendingCount > 0 && (
