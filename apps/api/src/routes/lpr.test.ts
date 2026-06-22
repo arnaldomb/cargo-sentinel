@@ -12,6 +12,7 @@ vi.mock('../jobs/queue', () => ({
 import { app } from '../index';
 import { lprQueue } from '../jobs/queue';
 import { buildIdempotencyKey } from '../jobs/idempotency';
+import { resetCameraHintCache } from './lpr';
 
 const validPayload = {
   PlateNumber: 'ABC1234',
@@ -21,19 +22,33 @@ const validPayload = {
   Direction: 'in',
 };
 
+const nestedIntelbrasPayload = {
+  DeviceID: 'LPR-0009',
+  Picture: {
+    SnapTime: '2026-06-20T14:45:00',
+    Plate: {
+      PlateNumber: 'XYZ1234',
+    },
+    NormalPic: {
+      Content: 'bmVzdGVk',
+    },
+  },
+};
+
 describe('POST /api/lpr/NotificationInfo/vehicle', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetCameraHintCache();
   });
 
-  it('returns HTTP 200 immediately with { status: "received" }', async () => {
+  it('returns HTTP 200 immediately with { Result: true }', async () => {
     const response = await request(app)
       .post('/api/lpr/NotificationInfo/vehicle')
       .send(validPayload)
       .set('Content-Type', 'application/json');
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ status: 'received' });
+    expect(response.body).toEqual({ Result: true });
   });
 
   it('calls lprQueue.add with the SHA256 idempotencyKey as the BullMQ jobId', async () => {
@@ -85,6 +100,95 @@ describe('POST /api/lpr/NotificationInfo/vehicle', () => {
       .set('Content-Type', 'application/json');
 
     expect(response.status).toBe(200);
+    expect(lprQueue.add).not.toHaveBeenCalled();
+  });
+
+  it('accepts the Intelbras TollgateInfo endpoint and enqueues the event', async () => {
+    const response = await request(app)
+      .post('/NotificationInfo/TollgateInfo')
+      .send(validPayload)
+      .set('Content-Type', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ Result: true });
+    expect(lprQueue.add).toHaveBeenCalledOnce();
+  });
+
+  it('accepts the nested Intelbras Picture payload used by the base project', async () => {
+    const response = await request(app)
+      .post('/NotificationInfo/TollgateInfo')
+      .send(nestedIntelbrasPayload)
+      .set('Content-Type', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ Result: true });
+    expect(lprQueue.add).toHaveBeenCalledWith(
+      'process-lpr-event',
+      expect.objectContaining({
+        PlateNumber: 'XYZ1234',
+        ImageBase64: 'bmVzdGVk',
+        CameraId: 'LPR-0009',
+        DateTime: '2026-06-20T14:45:00',
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('accepts KeepAlive and DeviceInfo without enqueuing LPR work', async () => {
+    const keepAliveResponse = await request(app)
+      .post('/NotificationInfo/KeepAlive')
+      .send({ DeviceID: 'cam-1', Time: '2026-06-21T15:00:00Z' })
+      .set('Content-Type', 'application/json');
+
+    const deviceInfoResponse = await request(app)
+      .post('/NotificationInfo/DeviceInfo')
+      .send({ DeviceID: 'cam-1', DeviceModel: 'VIP-5460-LPR-IA' })
+      .set('Content-Type', 'application/json');
+
+    expect(keepAliveResponse.status).toBe(200);
+    expect(deviceInfoResponse.status).toBe(200);
+    expect(lprQueue.add).not.toHaveBeenCalled();
+  });
+
+  it('uses the recent KeepAlive camera hint when TollgateInfo omits CameraId', async () => {
+    await request(app)
+      .post('/NotificationInfo/KeepAlive')
+      .send({
+        DeviceID: '6a2598b1-9b6c-92f9-c0f7-bf4344b19b6c',
+        IPAddress: '192.168.16.117',
+      })
+      .set('Content-Type', 'application/json');
+
+    const response = await request(app)
+      .post('/NotificationInfo/TollgateInfo')
+      .send({
+        Picture: {
+          SnapTime: '2026-06-21T16:10:00Z',
+          Plate: { PlateNumber: 'AB12349' },
+          NormalPic: { Content: 'bmVzdGVk' },
+        },
+      })
+      .set('Content-Type', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(lprQueue.add).toHaveBeenCalledWith(
+      'process-lpr-event',
+      expect.objectContaining({
+        PlateNumber: 'AB12349',
+        CameraId: '6a2598b1-9b6c-92f9-c0f7-bf4344b19b6c',
+      }),
+      expect.anything(),
+    );
+  });
+
+  it('accepts the base NotificationInfo endpoint without an action', async () => {
+    const response = await request(app)
+      .post('/NotificationInfo')
+      .send({ DeviceID: 'cam-1' })
+      .set('Content-Type', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ Result: true });
     expect(lprQueue.add).not.toHaveBeenCalled();
   });
 

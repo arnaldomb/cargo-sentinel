@@ -25,6 +25,7 @@ export async function criarObra(_prevState: unknown, formData: FormData) {
 export async function criarCamera(obraId: string, _prevState: unknown, formData: FormData) {
   const cookieStore = await cookies();
   const codigoLpr = formData.get('codigoLpr') as string;
+  const nome = formData.get('nome') as string | null;
   const ip = formData.get('ip') as string | null;
 
   if (!codigoLpr?.trim()) return { error: 'Código LPR é obrigatório' };
@@ -32,7 +33,11 @@ export async function criarCamera(obraId: string, _prevState: unknown, formData:
   const res = await fetch(`${API_BASE}/api/obras/${obraId}/cameras`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: cookieStore.toString() },
-    body: JSON.stringify({ codigoLpr: codigoLpr.trim(), ip: ip?.trim() || undefined }),
+    body: JSON.stringify({
+      codigoLpr: codigoLpr.trim(),
+      nome: nome?.trim() || undefined,
+      ip: ip?.trim() || undefined,
+    }),
   });
 
   if (!res.ok) return { error: 'Erro ao criar câmera' };

@@ -18,6 +18,20 @@ export function NovaCameraForm({ obraId }: { obraId: string }) {
       )}
 
       <div>
+        <label htmlFor="nome" className="block text-sm font-medium text-slate-700">
+          Nome da Câmera
+        </label>
+        <input
+          id="nome"
+          name="nome"
+          type="text"
+          maxLength={100}
+          placeholder="Ex: Entrada Principal, Portão Lateral"
+          className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ggtech-blue"
+        />
+      </div>
+
+      <div>
         <label htmlFor="codigoLpr" className="block text-sm font-medium text-slate-700">
           Código LPR <span className="text-red-500">*</span>
         </label>
@@ -26,9 +40,10 @@ export function NovaCameraForm({ obraId }: { obraId: string }) {
           name="codigoLpr"
           type="text"
           required
-          placeholder="Ex: CAM-001"
-          className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ggtech-blue"
+          placeholder="ID ou código do dispositivo Intelbras"
+          className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ggtech-blue"
         />
+        <p className="mt-1 text-xs text-slate-400">Identificador único do dispositivo LPR</p>
       </div>
 
       <div>

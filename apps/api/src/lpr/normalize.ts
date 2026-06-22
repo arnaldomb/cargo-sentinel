@@ -1,5 +1,16 @@
 import type { IntelbrasPayload } from '@cargo-sentinel/shared';
 
+function getString(raw: Record<string, unknown>, key: string): string | undefined {
+  const value = raw[key];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function getNestedRecord(raw: Record<string, unknown>, key: string): Record<string, unknown> | undefined {
+  const value = raw[key];
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined;
+  return value as Record<string, unknown>;
+}
+
 /**
  * Normalize an unknown Intelbras LPR webhook payload to the canonical IntelbrasPayload shape.
  *
@@ -9,40 +20,50 @@ import type { IntelbrasPayload } from '@cargo-sentinel/shared';
  * Throws if the plate number or image data is missing (V5 input validation / T-1-02 DoS mitigation).
  */
 export function normalizeIntelbrasPayload(raw: Record<string, unknown>): IntelbrasPayload {
+  const picture = getNestedRecord(raw, 'Picture');
+  const plateInfo = picture ? getNestedRecord(picture, 'Plate') : undefined;
+  const normalPic = picture ? getNestedRecord(picture, 'NormalPic') : undefined;
+
   // Plate number — try multiple known field name conventions
   const plate =
-    (raw['PlateNumber'] as string | undefined) ??
-    (raw['plate_number'] as string | undefined) ??
-    (raw['LicensePlate'] as string | undefined) ??
-    (raw['Plate'] as string | undefined) ??
-    (raw['placa'] as string | undefined);
+    getString(raw, 'PlateNumber') ??
+    getString(raw, 'plate_number') ??
+    getString(raw, 'LicensePlate') ??
+    getString(raw, 'Plate') ??
+    getString(raw, 'placa') ??
+    (plateInfo ? getString(plateInfo, 'PlateNumber') : undefined);
 
   // Image base64 — try multiple known field name conventions
   const image =
-    (raw['ImageBase64'] as string | undefined) ??
-    (raw['PicData'] as string | undefined) ??
-    (raw['image_base64'] as string | undefined) ??
-    (raw['picture'] as string | undefined);
+    getString(raw, 'ImageBase64') ??
+    getString(raw, 'PicData') ??
+    getString(raw, 'image_base64') ??
+    getString(raw, 'picture') ??
+    (normalPic ? getString(normalPic, 'Content') : undefined);
 
   // Camera ID — try multiple known field name conventions
   const camera =
-    (raw['CameraId'] as string | undefined) ??
-    (raw['camera_id'] as string | undefined) ??
-    (raw['ChannelId'] as string | undefined) ??
-    (raw['DeviceId'] as string | undefined) ??
+    getString(raw, 'CameraId') ??
+    getString(raw, 'camera_id') ??
+    getString(raw, 'ChannelId') ??
+    getString(raw, 'DeviceId') ??
+    getString(raw, 'DeviceID') ??
     '';
 
   // Direction — optional field
   const direction =
-    (raw['Direction'] as string | undefined) ??
-    (raw['direcao'] as string | undefined);
+    getString(raw, 'Direction') ??
+    getString(raw, 'direcao') ??
+    (plateInfo ? getString(plateInfo, 'Direction') : undefined);
 
   // Timestamp — try multiple known field name conventions
   const dateTime =
-    (raw['DateTime'] as string | undefined) ??
-    (raw['Timestamp'] as string | undefined) ??
-    (raw['EventTime'] as string | undefined) ??
-    (raw['time'] as string | undefined) ??
+    getString(raw, 'DateTime') ??
+    getString(raw, 'Timestamp') ??
+    getString(raw, 'EventTime') ??
+    getString(raw, 'time') ??
+    (picture ? getString(picture, 'SnapTime') : undefined) ??
+    (plateInfo ? getString(plateInfo, 'Time') : undefined) ??
     new Date().toISOString();
 
   // V5: validate required fields (plate + image) — reject before any further processing

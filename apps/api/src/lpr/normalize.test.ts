@@ -46,6 +46,26 @@ describe('normalizeIntelbrasPayload', () => {
     expect(result.DateTime).toBe('2026-06-20T16:00:00');
   });
 
+  it('maps the nested Intelbras Picture payload used by the base project', () => {
+    const raw = {
+      DeviceID: 'VIP-5460-LPR-IA',
+      Picture: {
+        SnapTime: '2026-06-20T17:00:00',
+        Plate: {
+          PlateNumber: 'GHI9012',
+        },
+        NormalPic: {
+          Content: 'nestedbase64==',
+        },
+      },
+    };
+    const result = normalizeIntelbrasPayload(raw);
+    expect(result.PlateNumber).toBe('GHI9012');
+    expect(result.ImageBase64).toBe('nestedbase64==');
+    expect(result.CameraId).toBe('VIP-5460-LPR-IA');
+    expect(result.DateTime).toBe('2026-06-20T17:00:00');
+  });
+
   it('throws when plate number is missing (V5 input validation)', () => {
     const raw = {
       ImageBase64: 'base64data==',

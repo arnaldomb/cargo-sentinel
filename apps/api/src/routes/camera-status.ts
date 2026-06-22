@@ -1,7 +1,6 @@
 import { Router, type Router as RouterType } from 'express';
 import { requireRole } from '../middleware/rbac';
-
-const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+import { getLastCameraHeartbeat, isCameraOnline } from '../lpr/heartbeat';
 
 const router: RouterType = Router();
 
@@ -23,25 +22,11 @@ router.get(
       },
     });
 
-    const latestByCamera =
-      cameras.length === 0
-        ? []
-        : await req.tenantClient!.evento.groupBy({
-            by: ['cameraId'],
-            where: { cameraId: { in: cameras.map((camera) => camera.id) } },
-            _max: { timestamp: true },
-          });
-
-    const latestMap = new Map(
-      latestByCamera.map((item) => [item.cameraId, item._max.timestamp ?? null]),
-    );
-
     const now = Date.now();
     const items = cameras.map((camera) => {
-      const ultimoEvento = latestMap.get(camera.id) ?? null;
-      const ultimoEventoEm = ultimoEvento ? ultimoEvento.toISOString() : null;
-      const status =
-        ultimoEvento && now - ultimoEvento.getTime() <= ONLINE_WINDOW_MS ? 'online' : 'offline';
+      const lastHeartbeat = getLastCameraHeartbeat(camera.codigoLpr);
+      const ultimoEventoEm = lastHeartbeat ? lastHeartbeat.toISOString() : null;
+      const status = isCameraOnline(camera.codigoLpr, now) ? 'online' : 'offline';
 
       return {
         id: camera.id,

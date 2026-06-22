@@ -55,6 +55,20 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
 
   // Initial data load
   useEffect(() => {
+    let isMounted = true;
+
+    async function refreshCameraStatus() {
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/cameras/status`, { credentials: 'include' });
+        if (!response.ok || !isMounted) return;
+        const cameraJson = await response.json();
+        if (!isMounted) return;
+        setCameras(cameraJson.items ?? []);
+      } catch {
+        // Keep the current sidebar state if the periodic refresh fails.
+      }
+    }
+
     async function load() {
       try {
         setLoading(true);
@@ -80,6 +94,14 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
     }
 
     void load();
+    const refreshTimer = window.setInterval(() => {
+      void refreshCameraStatus();
+    }, 15_000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(refreshTimer);
+    };
   }, [apiBaseUrl]);
 
   // Socket.IO subscription

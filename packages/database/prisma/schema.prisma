@@ -122,6 +122,7 @@ model Obra {
 model Camera {
   id        String   @id @default(cuid())
   codigoLpr String   @unique
+  nome      String?
   ip        String?
   obraId    String
   empresaId String

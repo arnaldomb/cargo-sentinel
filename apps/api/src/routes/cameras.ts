@@ -24,7 +24,10 @@ router.get(
     const cameras = await req.tenantClient!.camera.findMany({
       where: { obraId, ativo: true },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, codigoLpr: true, ip: true, ativo: true, createdAt: true },
+      select: {
+        id: true, codigoLpr: true, nome: true, ip: true, ativo: true, createdAt: true,
+        eventos: { select: { timestamp: true }, orderBy: { timestamp: 'desc' }, take: 1 },
+      },
     });
     res.json(cameras);
   },
@@ -40,7 +43,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'ADMIN_EMPRESA'),
   async (req, res) => {
     const { obraId } = req.params;
-    const { codigoLpr, ip } = req.body as { codigoLpr?: string; ip?: string };
+    const { codigoLpr, nome, ip } = req.body as { codigoLpr?: string; nome?: string; ip?: string };
     if (!codigoLpr || typeof codigoLpr !== 'string' || codigoLpr.trim().length < 3) {
       return res.status(400).json({ error: 'Campo codigoLpr é obrigatório (mínimo 3 caracteres)' });
     }
@@ -55,7 +58,8 @@ router.post(
       const camera = await req.tenantClient!.camera.create({
         data: {
           codigoLpr: codigoLpr.trim(),
-          ip: ip?.trim(),
+          nome: nome?.trim() || null,
+          ip: ip?.trim() || null,
           obraId,
           empresaId, // denormalizado (TENANT-04)
         },
@@ -80,7 +84,7 @@ router.put(
   requireRole('SUPER_ADMIN', 'ADMIN_EMPRESA'),
   async (req, res) => {
     const { obraId, id } = req.params;
-    const { codigoLpr, ip } = req.body as { codigoLpr?: string; ip?: string };
+    const { codigoLpr, nome, ip } = req.body as { codigoLpr?: string; nome?: string; ip?: string };
     if (!codigoLpr || typeof codigoLpr !== 'string' || codigoLpr.trim().length < 3) {
       return res.status(400).json({ error: 'Campo codigoLpr é obrigatório (mínimo 3 caracteres)' });
     }
@@ -90,7 +94,7 @@ router.put(
       await req.tenantClient!.camera.findFirstOrThrow({ where: { id, obraId } });
       const updated = await req.tenantClient!.camera.update({
         where: { id },
-        data: { codigoLpr: codigoLpr.trim(), ip: ip?.trim() },
+        data: { codigoLpr: codigoLpr.trim(), nome: nome?.trim() || null, ip: ip?.trim() || null },
       });
       res.json(updated);
     } catch (err: unknown) {

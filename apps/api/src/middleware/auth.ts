@@ -32,7 +32,7 @@ async function getDerivedKey(secret: string, cookieName: string): Promise<Uint8A
 
 export async function decryptAuthToken(
   token: string,
-  cookieName = COOKIE_NAME,
+  cookieName: (typeof AUTH_COOKIE_NAMES)[number] = COOKIE_NAME,
 ): Promise<AuthenticatedUser> {
   const secret = process.env.AUTH_SECRET;
   if (!secret) throw new Error('AUTH_SECRET não configurado');

@@ -5,6 +5,7 @@ import { DeleteObraButton } from '../../delete-obra-button';
 import { DeleteCameraButton } from './delete-camera-button';
 
 const API_BASE = process.env.INTERNAL_API_URL ?? 'http://localhost:4000';
+const ONLINE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
 
 type Obra = {
   id: string;
@@ -16,11 +17,17 @@ type Obra = {
 type Camera = {
   id: string;
   codigoLpr: string;
-  ip?: string;
+  nome?: string | null;
+  ip?: string | null;
   ativo: boolean;
-  status?: string;
-  ultimoEventoEm?: string;
+  eventos?: { timestamp: string }[];
 };
+
+function calcStatus(camera: Camera): 'online' | 'offline' {
+  const lastTs = camera.eventos?.[0]?.timestamp;
+  if (!lastTs) return 'offline';
+  return Date.now() - new Date(lastTs).getTime() < ONLINE_THRESHOLD_MS ? 'online' : 'offline';
+}
 
 export default async function ObraDetalhePage({
   params,
@@ -37,7 +44,6 @@ export default async function ObraDetalhePage({
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
-  // API returns array directly — no wrapper object
   let obra: Obra | undefined;
   try {
     const res = await fetch(`${API_BASE}/api/obras`, {
@@ -54,7 +60,6 @@ export default async function ObraDetalhePage({
 
   if (!obra) notFound();
 
-  // Cameras API also returns array directly
   let cameras: Camera[] = [];
   try {
     const res = await fetch(`${API_BASE}/api/obras/${id}/cameras`, {
@@ -72,7 +77,6 @@ export default async function ObraDetalhePage({
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-5xl">
-        {/* Header */}
         <div className="mb-6">
           <a href="/gestao" className="text-sm text-ggtech-blue hover:underline">
             ← Voltar para Gestão
@@ -96,7 +100,6 @@ export default async function ObraDetalhePage({
           </div>
         </div>
 
-        {/* Câmeras */}
         <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
             <h2 className="font-heading text-lg font-semibold text-slate-800">
@@ -124,6 +127,7 @@ export default async function ObraDetalhePage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-100 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-3">Nome</th>
                   <th className="px-4 py-3">Código LPR</th>
                   <th className="px-4 py-3">IP</th>
                   <th className="px-4 py-3">Status</th>
@@ -132,37 +136,52 @@ export default async function ObraDetalhePage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {cameras.map((camera) => (
-                  <tr key={camera.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-sm font-medium text-slate-800">
-                      {camera.codigoLpr}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {camera.ip ?? <span className="italic text-slate-400">—</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium text-white ${
-                          camera.status === 'online' ? 'bg-green-600' : 'bg-slate-500'
-                        }`}
-                      >
-                        {camera.status ?? 'offline'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {camera.ultimoEventoEm
-                        ? new Date(camera.ultimoEventoEm).toLocaleString('pt-BR')
-                        : 'nunca'}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <DeleteCameraButton
-                        obraId={id}
-                        cameraId={camera.id}
-                        codigoLpr={camera.codigoLpr}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                {cameras.map((camera) => {
+                  const status = calcStatus(camera);
+                  const lastTs = camera.eventos?.[0]?.timestamp;
+                  return (
+                    <tr key={camera.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 font-medium text-slate-800">
+                        {camera.nome ?? <span className="italic text-slate-400">—</span>}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                        {camera.codigoLpr}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {camera.ip ?? <span className="italic text-slate-400">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium text-white ${
+                            status === 'online' ? 'bg-green-600' : 'bg-slate-500'
+                          }`}
+                        >
+                          {status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">
+                        {lastTs
+                          ? new Date(lastTs).toLocaleString('pt-BR')
+                          : 'nunca'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <a
+                            href={`/gestao/obras/${id}/cameras/${camera.id}/editar`}
+                            className="rounded px-2 py-1 text-xs font-medium text-ggtech-blue border border-ggtech-blue hover:bg-ggtech-blue hover:text-white transition-colors"
+                          >
+                            Editar
+                          </a>
+                          <DeleteCameraButton
+                            obraId={id}
+                            cameraId={camera.id}
+                            codigoLpr={camera.nome ?? camera.codigoLpr}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

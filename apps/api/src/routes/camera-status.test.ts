@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Request, Response, NextFunction } from 'express';
 import express from 'express';
 import request from 'supertest';
+import { recordCameraHeartbeat, resetCameraHeartbeatRegistry } from '../lpr/heartbeat';
 
 const { mockRequireRole } = vi.hoisted(() => {
   const mockRequireRole = vi.fn();
@@ -18,9 +19,6 @@ function buildTenantClient() {
   return {
     camera: {
       findMany: vi.fn(),
-    },
-    evento: {
-      groupBy: vi.fn(),
     },
   };
 }
@@ -42,15 +40,19 @@ describe('camera status routes', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    resetCameraHeartbeatRegistry();
     tenantClient = buildTenantClient();
   });
 
-  it('retorna status online/offline com base no timestamp do último evento', async () => {
+  it('retorna status online/offline com base no KeepAlive dos ultimos 60 segundos', async () => {
     mockRequireRole.mockImplementation((_req: Request, _res: Response, next: NextFunction) => next());
 
     const now = new Date();
-    const onlineAt = new Date(now.getTime() - 60_000);
-    const offlineAt = new Date(now.getTime() - 10 * 60_000);
+    const onlineAt = new Date(now.getTime() - 30_000);
+    const offlineAt = new Date(now.getTime() - 61_000);
+
+    recordCameraHeartbeat('LPR-0001', onlineAt);
+    recordCameraHeartbeat('LPR-0002', offlineAt);
 
     tenantClient.camera.findMany.mockResolvedValue([
       {
@@ -68,11 +70,6 @@ describe('camera status routes', () => {
         obra: { id: 'obra1', nome: 'Obra Centro' },
       },
     ]);
-    tenantClient.evento.groupBy.mockResolvedValue([
-      { cameraId: 'cam1', _max: { timestamp: onlineAt } },
-      { cameraId: 'cam2', _max: { timestamp: offlineAt } },
-    ]);
-
     const app = buildApp({ id: 'user1', role: 'OPERADOR', empresaId: 'emp1' }, tenantClient);
 
     const res = await request(app).get('/api/cameras/status');
