@@ -1,6 +1,9 @@
 'use client';
 
-import { X, LayoutDashboard, Bell, Search, FileText, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { X, LayoutDashboard, Bell, Search, FileText, Settings, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
 import type { CameraStatusItem } from '@/lib/dashboard';
 
 type SidebarProps = {
@@ -11,7 +14,16 @@ type SidebarProps = {
   onClose: () => void;
 };
 
+function navClass(active: boolean) {
+  return active
+    ? 'flex items-center gap-2 rounded-lg bg-ggtech-blue px-3 py-2 text-sm font-semibold text-white'
+    : 'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-200 transition-colors hover:bg-white/10 hover:text-white';
+}
+
 export function Sidebar({ cameras, userName, userRole, isOpen, onClose }: SidebarProps) {
+  const [camerasVisible, setCamerasVisible] = useState(true);
+  const pathname = usePathname();
+
   return (
     <>
       {/* Mobile overlay — fecha ao clicar fora */}
@@ -54,86 +66,88 @@ export function Sidebar({ cameras, userName, userRole, isOpen, onClose }: Sideba
           </button>
         </div>
 
-        {/* Nav item: Dashboard (sempre ativo — single-page app) */}
         <nav className="mb-4 flex flex-col gap-1">
-          <span
-            className="flex items-center gap-2 rounded-lg bg-ggtech-blue px-3 py-2 text-sm font-semibold text-white"
-            aria-current="page"
-          >
+          <Link href="/" className={navClass(pathname === '/')} aria-current={pathname === '/' ? 'page' : undefined}>
             <LayoutDashboard size={16} aria-hidden="true" />
             Dashboard
-          </span>
+          </Link>
 
-          {/* Link de busca: visível para todos os roles */}
-          <a
-            href="/buscar"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-200 transition-colors hover:bg-white/10 hover:text-white"
-          >
+          <Link href="/buscar" className={navClass(pathname === '/buscar')} aria-current={pathname === '/buscar' ? 'page' : undefined}>
             <Search size={16} aria-hidden="true" />
             Buscar
-          </a>
+          </Link>
 
-          {/* Link de relatórios: visível para todos os roles logados */}
-          <a
-            href="/relatorios"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-200 transition-colors hover:bg-white/10 hover:text-white"
-          >
+          <Link href="/relatorios" className={navClass(pathname === '/relatorios')} aria-current={pathname === '/relatorios' ? 'page' : undefined}>
             <FileText size={16} aria-hidden="true" />
             Relatórios
-          </a>
+          </Link>
 
-          {/* Link de gestão: visível apenas para ADMIN_EMPRESA */}
+          <Link href="/suspeitos" className={navClass(pathname === '/suspeitos')} aria-current={pathname === '/suspeitos' ? 'page' : undefined}>
+            <ShieldAlert size={16} aria-hidden="true" />
+            Suspeitos
+          </Link>
+
           {userRole === 'ADMIN_EMPRESA' && (
-            <a
-              href="/gestao"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-200 transition-colors hover:bg-white/10 hover:text-white"
-            >
+            <Link href="/gestao" className={navClass(pathname.startsWith('/gestao'))} aria-current={pathname.startsWith('/gestao') ? 'page' : undefined}>
               <Settings size={16} aria-hidden="true" />
               Gestão
-            </a>
+            </Link>
           )}
 
-          {/* Link de admin: visivel apenas para ADMIN_EMPRESA (ALERTS-06) */}
           {userRole === 'ADMIN_EMPRESA' && (
-            <a
-              href="/configuracoes/alertas"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-blue-200 transition-colors hover:bg-white/10 hover:text-white"
-            >
+            <Link href="/configuracoes/alertas" className={navClass(pathname.startsWith('/configuracoes'))} aria-current={pathname.startsWith('/configuracoes') ? 'page' : undefined}>
               <Bell size={16} aria-hidden="true" />
               Alertas WhatsApp
-            </a>
+            </Link>
           )}
         </nav>
 
         {/* Lista de câmeras */}
-        <div className="flex flex-col gap-3">
-          {cameras.length === 0 && (
-            <p className="text-xs text-blue-300">Nenhuma câmera registrada.</p>
-          )}
-          {cameras.map((camera) => (
-            <div
-              key={camera.id}
-              className="rounded-lg bg-white/10 p-3 text-white backdrop-blur-sm"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <strong className="text-sm font-semibold">{camera.codigoLpr}</strong>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium text-white ${
-                    camera.status === 'online' ? 'bg-green-600' : 'bg-slate-500'
-                  }`}
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => setCamerasVisible((v) => !v)}
+            className="flex items-center justify-between rounded-md px-1 py-1 text-xs font-medium text-blue-300 hover:text-white transition-colors"
+          >
+            <span>Câmeras ({cameras.length})</span>
+            {camerasVisible ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+
+          {camerasVisible && (
+            <div className="flex flex-col gap-3">
+              {cameras.length === 0 && (
+                <p className="text-xs text-blue-300">Nenhuma câmera registrada.</p>
+              )}
+              {cameras.map((camera) => (
+                <div
+                  key={camera.id}
+                  className="rounded-lg bg-white/10 p-3 text-white backdrop-blur-sm"
                 >
-                  {camera.status}
-                </span>
-              </div>
-              <div className="mt-1 text-xs text-blue-200">{camera.obra.nome}</div>
-              <div className="mt-1 text-xs text-blue-300">
-                Último sinal:{' '}
-                {camera.ultimoEventoEm
-                  ? new Date(camera.ultimoEventoEm).toLocaleString('pt-BR')
-                  : 'nunca'}
-              </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <strong className="text-sm font-semibold">
+                      {camera.nome ?? camera.codigoLpr}
+                    </strong>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium text-white ${
+                        camera.status === 'online' ? 'bg-green-600' : 'bg-slate-500'
+                      }`}
+                    >
+                      {camera.status}
+                    </span>
+                  </div>
+                  {camera.nome && (
+                    <div className="mt-0.5 font-mono text-xs text-blue-300">{camera.codigoLpr}</div>
+                  )}
+                  <div className="mt-1 text-xs text-blue-200">{camera.obra.nome}</div>
+                  <div className="mt-1 text-xs text-blue-300">
+                    Último sinal:{' '}
+                    {camera.ultimoEventoEm
+                      ? new Date(camera.ultimoEventoEm).toLocaleString('pt-BR')
+                      : 'nunca'}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       </aside>
     </>

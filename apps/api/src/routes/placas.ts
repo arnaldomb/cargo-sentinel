@@ -1,12 +1,115 @@
 import { Router, type Router as RouterType } from 'express';
 import { requireRole } from '../middleware/rbac';
 import { emitPlacaClassificada } from '../realtime/server';
-import { getPresignedUrl } from '../services/garage';
+import { getThumbnailProxyUrl } from '../services/garage';
 
 const CLASSIFICACOES = ['LIBERADO', 'VISITANTE', 'ATENCAO', 'SUSPEITO', 'CRITICO'] as const;
 type ClassificacaoValue = (typeof CLASSIFICACOES)[number];
 
 const router: RouterType = Router();
+
+/**
+ * GET /api/placas/suspeitos
+ * Lista placas classificadas como SUSPEITO ou CRITICO.
+ */
+router.get(
+  '/suspeitos',
+  requireRole('SUPER_ADMIN', 'ADMIN_EMPRESA', 'OPERADOR'),
+  async (req, res) => {
+    const placas = await req.tenantClient!.placa.findMany({
+      where: { classificacao: { in: ['SUSPEITO', 'CRITICO'] } },
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true, numero: true, classificacao: true, observacao: true, updatedAt: true,
+        obraClassificacao: { select: { nome: true } },
+      },
+    });
+    res.json(placas);
+  },
+);
+
+/**
+ * POST /api/placas/suspeitos
+ * Cria ou atualiza uma placa como SUSPEITO ou CRITICO.
+ * Permite pré-cadastrar placas antes de aparecerem em eventos.
+ */
+router.post(
+  '/suspeitos',
+  requireRole('SUPER_ADMIN', 'ADMIN_EMPRESA', 'OPERADOR'),
+  async (req, res) => {
+    const { numero, classificacao, observacao } = req.body as {
+      numero?: string;
+      classificacao?: string;
+      observacao?: string;
+    };
+
+    if (!numero || typeof numero !== 'string' || numero.trim().length < 3) {
+      return res.status(400).json({ error: 'Número da placa inválido (mínimo 3 caracteres)' });
+    }
+    if (classificacao !== 'SUSPEITO' && classificacao !== 'CRITICO') {
+      return res.status(400).json({ error: 'classificacao deve ser SUSPEITO ou CRITICO' });
+    }
+
+    const empresaId = req.user!.empresaId;
+    if (!empresaId) return res.status(403).json({ error: 'Usuário sem empresa' });
+
+    const numeroFmt = numero.trim().toUpperCase();
+
+    const placa = await req.tenantClient!.placa.upsert({
+      where: { numero_empresaId: { numero: numeroFmt, empresaId } },
+      create: { numero: numeroFmt, empresaId, classificacao, observacao: observacao?.trim() || null },
+      update: { classificacao, observacao: observacao?.trim() || null },
+    });
+
+    await req.tenantClient!.classificacaoHistorico.create({
+      data: {
+        placaId: placa.id,
+        empresaId,
+        classificacaoDe: placa.classificacao,
+        classificacaoPara: classificacao,
+        observacao: observacao?.trim() || null,
+        usuarioId: req.user!.id,
+      },
+    });
+
+    return res.status(201).json(placa);
+  },
+);
+
+/**
+ * DELETE /api/placas/suspeitos/:placaId
+ * Remove da lista de suspeitos voltando para VISITANTE.
+ */
+router.delete(
+  '/suspeitos/:placaId',
+  requireRole('SUPER_ADMIN', 'ADMIN_EMPRESA', 'OPERADOR'),
+  async (req, res) => {
+    const { placaId } = req.params;
+    try {
+      const placa = await req.tenantClient!.placa.update({
+        where: { id: placaId },
+        data: { classificacao: 'VISITANTE', observacao: null },
+      });
+
+      await req.tenantClient!.classificacaoHistorico.create({
+        data: {
+          placaId: placa.id,
+          empresaId: placa.empresaId,
+          classificacaoDe: 'SUSPEITO',
+          classificacaoPara: 'VISITANTE',
+          observacao: 'Removido da lista de suspeitos',
+          usuarioId: req.user!.id,
+        },
+      });
+
+      return res.status(204).send();
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      if (code === 'P2025') return res.status(404).json({ error: 'Placa não encontrada' });
+      throw err;
+    }
+  },
+);
 
 router.patch(
   '/:placaId/classificacao',
@@ -174,7 +277,7 @@ router.get(
         timestamp: e.timestamp.toISOString(),
         direcao: e.direcao,
         classificacao: e.classificacao,
-        thumbnailUrl: e.fotoGarageKey ? await getPresignedUrl(e.fotoGarageKey) : null,
+        thumbnailUrl: e.fotoGarageKey ? getThumbnailProxyUrl(e.fotoGarageKey) : null,
         obra: e.obra,
         camera: e.camera,
       })),

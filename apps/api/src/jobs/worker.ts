@@ -2,7 +2,7 @@ import { Worker } from 'bullmq';
 import { prisma } from '@cargo-sentinel/database';
 import type { LprJobData } from '@cargo-sentinel/shared';
 import { createRedisConnection } from '../services/redis';
-import { getPresignedUrl, uploadToGarage } from '../services/garage';
+import { getThumbnailProxyUrl, uploadToGarage } from '../services/garage';
 import { emitCameraStatus, emitEventoNovo } from '../realtime/server';
 import { alertQueue } from './queue';
 import type { CrossSiteAlertPayload, WhatsAppAlertPayload } from './alert-worker';
@@ -102,17 +102,31 @@ export async function processLprJob(jobData: LprJobData): Promise<void> {
       alertQueue.add('alert:whatsapp', { type: 'alert:whatsapp', payload: whatsAppPayload }),
     ]);
   } else if (isHighRisk && !placa.obraClassificacaoId) {
-    // Placa de alto risco sem obra de classificação registrada — envia WhatsApp mas sem overlay cross-site
+    // Placa pré-cadastrada na lista de suspeitos (sem evento anterior) — emite overlay + WhatsApp
+    const crossSitePayload: CrossSiteAlertPayload = {
+      empresaId: camera.empresaId,
+      placaNumero: PlateNumber,
+      classificacao: placa.classificacao as 'SUSPEITO' | 'CRITICO',
+      obraDetectadaId: camera.obraId,
+      obraDetectadaNome: camera.obra.nome,
+      obraClassificacaoId: 'manual',
+      obraClassificacaoNome: 'Lista de Suspeitos',
+      eventoId: idempotencyKey,
+      timestamp: new Date(DateTime).toISOString(),
+    };
     const whatsAppPayload: WhatsAppAlertPayload = {
       empresaId: camera.empresaId,
       obraId: camera.obraId,
       placaNumero: PlateNumber,
       classificacao: placa.classificacao as 'SUSPEITO' | 'CRITICO',
       obraDetectadaNome: camera.obra.nome,
-      obraClassificacaoNome: 'Não especificada',
+      obraClassificacaoNome: 'Lista de Suspeitos',
       timestamp: new Date(DateTime).toISOString(),
     };
-    await alertQueue.add('alert:whatsapp', { type: 'alert:whatsapp', payload: whatsAppPayload });
+    await Promise.all([
+      alertQueue.add('alert:cross-site', { type: 'alert:cross-site', payload: crossSitePayload }),
+      alertQueue.add('alert:whatsapp', { type: 'alert:whatsapp', payload: whatsAppPayload }),
+    ]);
   }
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -142,7 +156,7 @@ export async function processLprJob(jobData: LprJobData): Promise<void> {
     update: {}, // do nothing on conflict — idempotent
   });
 
-  const thumbnailUrl = garageKey ? await getPresignedUrl(garageKey) : null;
+  const thumbnailUrl = garageKey ? getThumbnailProxyUrl(garageKey) : null;
 
   emitEventoNovo(camera.empresaId, {
     id: evento.id,

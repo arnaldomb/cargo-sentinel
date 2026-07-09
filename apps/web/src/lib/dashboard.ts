@@ -13,6 +13,7 @@ export type FeedItem = {
 export type CameraStatusItem = {
   id: string;
   codigoLpr: string;
+  nome: string | null;
   ip: string | null;
   obra: { id: string; nome: string };
   ultimoEventoEm: string | null;

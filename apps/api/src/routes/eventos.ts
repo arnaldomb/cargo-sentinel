@@ -1,5 +1,5 @@
 import { Router, type Router as RouterType } from 'express';
-import { getPresignedUrl } from '../services/garage';
+import { getThumbnailProxyUrl } from '../services/garage';
 import { requireRole } from '../middleware/rbac';
 import { eventoToFeedItem } from '../realtime/dto';
 
@@ -71,7 +71,7 @@ router.get(
         placaId: e.placaId,
         direcao: e.direcao,
         classificacao: e.classificacao,
-        thumbnailUrl: e.fotoGarageKey ? await getPresignedUrl(e.fotoGarageKey) : null,
+        thumbnailUrl: e.fotoGarageKey ? getThumbnailProxyUrl(e.fotoGarageKey) : null,
         obra: e.obra,
         camera: e.camera,
       })),
@@ -133,9 +133,9 @@ router.get(
     const page = hasMore ? eventos.slice(0, limit) : eventos;
 
     const items = await Promise.all(
-      page.map(async (evento) => {
+      page.map((evento) => {
         const thumbnailUrl = evento.fotoGarageKey
-          ? await getPresignedUrl(evento.fotoGarageKey)
+          ? getThumbnailProxyUrl(evento.fotoGarageKey)
           : null;
         return eventoToFeedItem(evento, thumbnailUrl);
       }),

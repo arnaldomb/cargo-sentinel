@@ -59,7 +59,7 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
 
     async function refreshCameraStatus() {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/cameras/status`, { credentials: 'include' });
+        const response = await fetch('/api/cameras-status-proxy');
         if (!response.ok || !isMounted) return;
         const cameraJson = await response.json();
         if (!isMounted) return;
@@ -75,8 +75,8 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
         setError(null);
 
         const [feedRes, cameraRes] = await Promise.all([
-          fetch(`${apiBaseUrl}/api/eventos/feed?limit=25`, { credentials: 'include' }),
-          fetch(`${apiBaseUrl}/api/cameras/status`, { credentials: 'include' }),
+          fetch('/api/eventos-proxy/feed?limit=25'),
+          fetch('/api/cameras-status-proxy'),
         ]);
 
         if (!feedRes.ok || !cameraRes.ok) {
@@ -147,9 +147,8 @@ export function DashboardClient({ userName, userRole }: DashboardClientProps) {
   async function submitClassification(item: FeedItem, classificacao: FeedItem['classificacao']) {
     if (!item.placaId) return;
 
-    const response = await fetch(`${apiBaseUrl}/api/placas/${item.placaId}/classificacao`, {
+    const response = await fetch(`/api/placas-proxy/${item.placaId}/classificacao`, {
       method: 'PATCH',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ classificacao }),
     });

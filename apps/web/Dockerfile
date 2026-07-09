@@ -27,6 +27,10 @@ COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
 COPY . .
 
+# NEXT_PUBLIC_* vars are baked at build time — pass via --build-arg
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+
 # Generate Prisma client and build dependent workspace packages before Next.js
 RUN pnpm --filter @cargo-sentinel/database exec prisma generate
 RUN pnpm --filter @cargo-sentinel/shared build

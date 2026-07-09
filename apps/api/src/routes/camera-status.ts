@@ -14,6 +14,7 @@ router.get(
       select: {
         id: true,
         codigoLpr: true,
+        nome: true,
         ip: true,
         createdAt: true,
         obra: {
@@ -31,6 +32,7 @@ router.get(
       return {
         id: camera.id,
         codigoLpr: camera.codigoLpr,
+        nome: camera.nome ?? null,
         ip: camera.ip,
         obra: camera.obra,
         ultimoEventoEm,

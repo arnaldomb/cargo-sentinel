@@ -26,7 +26,6 @@ export async function criarCamera(obraId: string, _prevState: unknown, formData:
   const cookieStore = await cookies();
   const codigoLpr = formData.get('codigoLpr') as string;
   const nome = formData.get('nome') as string | null;
-  const ip = formData.get('ip') as string | null;
 
   if (!codigoLpr?.trim()) return { error: 'Código LPR é obrigatório' };
 
@@ -36,7 +35,6 @@ export async function criarCamera(obraId: string, _prevState: unknown, formData:
     body: JSON.stringify({
       codigoLpr: codigoLpr.trim(),
       nome: nome?.trim() || undefined,
-      ip: ip?.trim() || undefined,
     }),
   });
 

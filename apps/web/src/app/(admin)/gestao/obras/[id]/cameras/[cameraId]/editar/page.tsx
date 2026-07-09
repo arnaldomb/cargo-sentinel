@@ -8,7 +8,6 @@ export default function EditarCameraPage() {
   const router = useRouter();
   const [codigoLpr, setCodigoLpr] = useState('');
   const [nome, setNome] = useState('');
-  const [ip, setIp] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -24,7 +23,6 @@ export default function EditarCameraPage() {
         if (cam) {
           setCodigoLpr(cam.codigoLpr);
           setNome(cam.nome ?? '');
-          setIp(cam.ip ?? '');
         }
         setLoading(false);
       })
@@ -42,7 +40,6 @@ export default function EditarCameraPage() {
       body: JSON.stringify({
         codigoLpr: codigoLpr.trim(),
         nome: nome.trim() || undefined,
-        ip: ip.trim() || undefined,
       }),
     });
     setSaving(false);
@@ -99,19 +96,6 @@ export default function EditarCameraPage() {
               className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ggtech-blue"
             />
             <p className="mt-1 text-xs text-slate-400">Identificador único do dispositivo LPR</p>
-          </div>
-
-          <div>
-            <label htmlFor="ip" className="block text-sm font-medium text-slate-700">
-              Endereço IP
-            </label>
-            <input
-              id="ip"
-              value={ip}
-              onChange={(e) => setIp(e.target.value)}
-              placeholder="192.168.1.x"
-              className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ggtech-blue"
-            />
           </div>
 
           <div className="flex items-center gap-3 pt-2">

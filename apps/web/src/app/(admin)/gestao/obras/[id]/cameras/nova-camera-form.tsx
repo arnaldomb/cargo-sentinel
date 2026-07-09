@@ -46,19 +46,6 @@ export function NovaCameraForm({ obraId }: { obraId: string }) {
         <p className="mt-1 text-xs text-slate-400">Identificador único do dispositivo LPR</p>
       </div>
 
-      <div>
-        <label htmlFor="ip" className="block text-sm font-medium text-slate-700">
-          Endereço IP
-        </label>
-        <input
-          id="ip"
-          name="ip"
-          type="text"
-          placeholder="192.168.1.x"
-          className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ggtech-blue"
-        />
-      </div>
-
       <div className="flex items-center gap-3 pt-2">
         <button
           type="submit"

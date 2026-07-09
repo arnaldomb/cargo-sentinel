@@ -43,11 +43,18 @@ export async function uploadToGarage(buffer: Buffer, cameraId: string): Promise<
 }
 
 /**
+ * Returns a thumbnail URL via the Next.js image proxy (same-domain, session-authenticated).
+ * Used for browser display — avoids presigned URL localhost issues when Garage has no public tunnel.
+ */
+export function getThumbnailProxyUrl(key: string): string {
+  const base = process.env.THUMBNAIL_PROXY_URL ?? 'http://localhost:3000/api/image-proxy';
+  return `${base}?key=${encodeURIComponent(key)}`;
+}
+
+/**
  * Generate a presigned GET URL for the public domain (STORAGE-03: 5-min TTL).
- *
- * CRITICAL (Pitfall 2): presigned URLs MUST be signed with GARAGE_SERVER_URL (public),
- * NOT GARAGE_INTERNAL_URL. The S3 signing algorithm includes the endpoint hostname in
- * the signature — a mismatch causes SignatureDoesNotMatch at 403.
+ * Use only for server-side downloads (e.g. PDF report generation).
+ * For browser thumbnails, use getThumbnailProxyUrl() instead.
  */
 export async function getPresignedUrl(key: string): Promise<string> {
   const publicS3 = new S3Client({

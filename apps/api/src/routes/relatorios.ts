@@ -1,10 +1,127 @@
 import { Router, type Router as RouterType } from 'express';
 import { requireRole } from '../middleware/rbac';
 import { reportQueue } from '../jobs/queue';
-import { getReportPresignedUrl } from '../services/report-generator';
+import { getReportPresignedUrl, generatePDF, generateXLSX, type ReportEvento, type ReportFiltrosDisplay } from '../services/report-generator';
 import type { ReportJobPayload } from '../jobs/report-worker';
+import { prisma } from '@cargo-sentinel/database';
 
 const router: RouterType = Router();
+
+// ============================================================
+// POST /api/relatorios/download-sync
+// Gera PDF/XLSX inline e retorna o arquivo para download imediato.
+// Não usa BullMQ nem Garage — sem thumbnails para garantir velocidade.
+// ============================================================
+router.post(
+  '/download-sync',
+  requireRole('SUPER_ADMIN', 'ADMIN_EMPRESA', 'OPERADOR'),
+  async (req, res) => {
+    const { formato, filtros = {} } = req.body as {
+      formato: unknown;
+      filtros?: {
+        dataInicio?: string;
+        dataFim?: string;
+        obraId?: string;
+        cameraId?: string;
+        classificacao?: string;
+        placa?: string;
+      };
+    };
+
+    if (formato !== 'PDF' && formato !== 'XLSX') {
+      res.status(400).json({ error: 'formato deve ser PDF ou XLSX' });
+      return;
+    }
+
+    const validClassificacoes = ['LIBERADO', 'VISITANTE', 'ATENCAO', 'SUSPEITO', 'CRITICO'];
+    if (filtros.classificacao && !validClassificacoes.includes(filtros.classificacao)) {
+      res.status(400).json({ error: 'classificacao inválida' });
+      return;
+    }
+
+    const empresaId = req.user!.empresaId;
+    if (!empresaId) {
+      res.status(403).json({ error: 'Usuário sem empresa associada' });
+      return;
+    }
+
+    const empresa = await prisma.empresa.findUnique({ where: { id: empresaId }, select: { nome: true } });
+
+    let obraNome: string | undefined;
+    let cameraCodigo: string | undefined;
+    if (filtros.obraId) {
+      const obra = await prisma.obra.findUnique({ where: { id: filtros.obraId }, select: { nome: true } });
+      obraNome = obra?.nome;
+    }
+    if (filtros.cameraId) {
+      const camera = await prisma.camera.findUnique({ where: { id: filtros.cameraId }, select: { codigoLpr: true } });
+      cameraCodigo = camera?.codigoLpr;
+    }
+
+    const where = {
+      empresaId,
+      ...(filtros.placa && { placaNumero: { contains: filtros.placa, mode: 'insensitive' as const } }),
+      ...(filtros.obraId && { obraId: filtros.obraId }),
+      ...(filtros.cameraId && { cameraId: filtros.cameraId }),
+      ...(filtros.classificacao && { classificacao: filtros.classificacao as never }),
+      ...((filtros.dataInicio || filtros.dataFim) && {
+        timestamp: {
+          ...(filtros.dataInicio && { gte: new Date(filtros.dataInicio) }),
+          ...(filtros.dataFim && { lte: new Date(filtros.dataFim) }),
+        },
+      }),
+    };
+
+    const rawEventos = await prisma.evento.findMany({
+      where,
+      take: 1000,
+      orderBy: { timestamp: 'desc' },
+      select: {
+        id: true, timestamp: true, placaNumero: true, classificacao: true, direcao: true,
+        fotoGarageKey: true,
+        obra: { select: { nome: true } },
+        camera: { select: { codigoLpr: true } },
+      },
+    });
+
+    const eventos: ReportEvento[] = rawEventos.map((e) => ({
+      ...e,
+      classificacao: String(e.classificacao),
+      direcao: e.direcao as 'ENTRADA' | 'SAIDA' | null,
+      thumbnailPresignedUrl: null,
+      _thumbnailBuffer: undefined,
+    }));
+
+    const filtrosDisplay: ReportFiltrosDisplay = {
+      dataInicio: filtros.dataInicio,
+      dataFim: filtros.dataFim,
+      obra: obraNome,
+      camera: cameraCodigo,
+      classificacao: filtros.classificacao,
+      placa: filtros.placa,
+    };
+
+    const empresaNome = empresa?.nome ?? 'Empresa';
+    let fileBuffer: Buffer;
+    let contentType: string;
+    let filename: string;
+
+    if (formato === 'PDF') {
+      fileBuffer = await generatePDF(eventos, filtrosDisplay, empresaNome);
+      contentType = 'application/pdf';
+      filename = `relatorio-${Date.now()}.pdf`;
+    } else {
+      fileBuffer = await generateXLSX(eventos, filtrosDisplay, empresaNome);
+      contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      filename = `relatorio-${Date.now()}.xlsx`;
+    }
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', fileBuffer.length);
+    res.send(fileBuffer);
+  },
+);
 
 // ============================================================
 // POST /api/relatorios
