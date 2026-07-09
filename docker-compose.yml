@@ -90,6 +90,8 @@ services:
       EVOLUTION_API_URL: http://evolution-api:8080
       EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
       EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME:-cargo-sentinel}
+      # Thumbnail proxy URL — browser loads images via Next.js proxy (no public Garage tunnel)
+      THUMBNAIL_PROXY_URL: "${WEB_PUBLIC_URL}/api/image-proxy"
     ports:
       - "4000:4000"
     healthcheck:
@@ -112,7 +114,7 @@ services:
       - sentinel
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`${PUBLIC_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/NotificationInfo`))"
+      - "traefik.http.routers.api.rule=Host(`${PUBLIC_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`) || PathPrefix(`/NotificationInfo`))"
       - "traefik.http.routers.api.priority=30"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
@@ -127,12 +129,14 @@ services:
   # ============================================================
   evolution-api:
     image: atendai/evolution-api:v2.2.3
-    restart: unless-stopped
+    restart: "no"
     environment:
       SERVER_URL: ${EVOLUTION_SERVER_URL:-http://evolution-api:8080}
       AUTHENTICATION_TYPE: apikey
       AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
-      DATABASE_ENABLED: "false"
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: "postgresql"
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_ENABLED: "true"
       REDIS_URI: redis://redis:6379
       REDIS_PREFIX_KEY: evolution
@@ -164,14 +168,21 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
     restart: unless-stopped
-    env_file: .env
     environment:
       NODE_ENV: production
       AUTH_TRUST_HOST: "true"
-      NEXTAUTH_URL: http://localhost:3000
       INTERNAL_API_URL: http://api:4000
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: ${WEB_PUBLIC_URL}
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN}
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD:-sentinel}@postgres:5432/${POSTGRES_DB:-cargo_sentinel}?schema=public"
+      GARAGE_INTERNAL_URL: "http://garage:3900"
+      GARAGE_ACCESS_KEY: ${GARAGE_ACCESS_KEY}
+      GARAGE_SECRET_KEY: ${GARAGE_SECRET_KEY}
+      GARAGE_DEFAULT_BUCKET: "lpr-images"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
       interval: 15s

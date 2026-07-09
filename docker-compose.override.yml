@@ -7,7 +7,8 @@
 services:
   # Direct port access for local dev tools (DBeaver, Redis Insight, etc.)
   postgres:
-    ports: ["5432:5432"]
+    # 5433 no host: 5432 já está ocupado pelo postgres do projeto opencheck
+    ports: ["5433:5432"]
 
   redis:
     ports: ["6379:6379"]
@@ -24,8 +25,6 @@ services:
   web:
     ports: ["3000:3000"]
     environment:
-      NEXTAUTH_URL: "http://localhost:3000"
-      AUTH_URL: "http://localhost:3000"
       AUTH_TRUST_HOST: "true"
 
   # ============================================================

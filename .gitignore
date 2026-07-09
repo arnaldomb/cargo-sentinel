@@ -37,3 +37,9 @@ vendor/
 coverage/
 .cache/
 tmp/
+
+# Artefatos locais (nao versionar)
+.gsd.migrating/
+debug-*.md
+deploy_key
+deploy_key.pub
