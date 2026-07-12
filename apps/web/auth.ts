@@ -40,6 +40,7 @@ export async function authorizeUser(credentials: AuthorizeCredentials) {
   });
   if (!user) return null;
   if (user.empresa && user.empresa.status === 'SUSPENSO') return null; // TENANT-01
+  if (!user.ativo) return null; // usuário desativado pelo superadmin
 
   const valid = await bcryptjs.compare(password, user.passwordHash);
   if (!valid) return null;

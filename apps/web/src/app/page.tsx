@@ -10,6 +10,10 @@ export default async function Home() {
     redirect('/login');
   }
 
+  if (session.user.role === 'SUPER_ADMIN') {
+    redirect('/admin');
+  }
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gray-50">
       {/* Top bar */}
