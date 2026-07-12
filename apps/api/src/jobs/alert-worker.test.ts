@@ -5,15 +5,16 @@ import type { CrossSiteAlertPayload, WhatsAppAlertPayload } from './alert-worker
 // Mock do prisma
 vi.mock('@cargo-sentinel/database', () => ({
   prisma: {
-    configuracaoAlerta: {
-      findMany: vi.fn(),
+    configuracaoWhatsApp: {
+      findUnique: vi.fn(),
     },
   },
 }));
 
-// Mock do whatsapp service
-vi.mock('../services/whatsapp', () => ({
-  sendAlertaWhatsApp: vi.fn(),
+// Mock do cliente Z-API
+vi.mock('../infra/zapi/zapi.service', () => ({
+  sendWhatsAppText: vi.fn(),
+  zapiConfigFrom: vi.fn(),
 }));
 
 const mockEmitCrossSite = vi.fn();
@@ -39,6 +40,8 @@ const whatsappPayload: WhatsAppAlertPayload = {
   obraClassificacaoNome: 'Obra A',
   timestamp: new Date('2026-06-21T10:00:00Z').toISOString(),
 };
+
+const zapiCfg = { instanceId: 'inst-1', token: 'tok-1', clientToken: null };
 
 describe('checkAndSetDedup', () => {
   it('returns true on first call (key not set)', async () => {
@@ -120,7 +123,7 @@ describe('processAlertJob — alert:whatsapp', () => {
   });
 
   it('skips sending when dedup key exists', async () => {
-    const { sendAlertaWhatsApp } = await import('../services/whatsapp');
+    const { sendWhatsAppText } = await import('../infra/zapi/zapi.service');
     const mockRedis = { set: vi.fn().mockResolvedValue(null) } as any; // null = key exists
 
     await processAlertJob(
@@ -128,41 +131,126 @@ describe('processAlertJob — alert:whatsapp', () => {
       { emitCrossSite: mockEmitCrossSite, redis: mockRedis },
     );
 
-    expect(sendAlertaWhatsApp).not.toHaveBeenCalled();
+    expect(sendWhatsAppText).not.toHaveBeenCalled();
   });
 
-  it('sends to all active configured numbers when dedup passes', async () => {
+  it('does not send when configuracaoWhatsApp is missing', async () => {
     const { prisma } = await import('@cargo-sentinel/database');
-    const { sendAlertaWhatsApp } = await import('../services/whatsapp');
-
+    const { sendWhatsAppText } = await import('../infra/zapi/zapi.service');
     const mockRedis = { set: vi.fn().mockResolvedValue('OK') } as any;
-    vi.mocked(prisma.configuracaoAlerta.findMany).mockResolvedValue([
-      { telefone: '+5511111111111' } as any,
-      { telefone: '+5522222222222' } as any,
-    ]);
-    vi.mocked(sendAlertaWhatsApp).mockResolvedValue({ success: true, messageId: 'msg-1' });
+    vi.mocked(prisma.configuracaoWhatsApp.findUnique).mockResolvedValue(null as any);
 
     await processAlertJob(
       { type: 'alert:whatsapp', payload: whatsappPayload },
       { emitCrossSite: mockEmitCrossSite, redis: mockRedis },
     );
 
-    expect(sendAlertaWhatsApp).toHaveBeenCalledTimes(2);
-    expect(sendAlertaWhatsApp).toHaveBeenCalledWith('+5511111111111', expect.stringContaining('ABC1234'));
+    expect(sendWhatsAppText).not.toHaveBeenCalled();
   });
 
-  it('continues sending to remaining numbers when one fails', async () => {
+  it('does not send when ativo is false', async () => {
     const { prisma } = await import('@cargo-sentinel/database');
-    const { sendAlertaWhatsApp } = await import('../services/whatsapp');
-
+    const { sendWhatsAppText } = await import('../infra/zapi/zapi.service');
     const mockRedis = { set: vi.fn().mockResolvedValue('OK') } as any;
-    vi.mocked(prisma.configuracaoAlerta.findMany).mockResolvedValue([
-      { telefone: '+5511111111111' } as any,
-      { telefone: '+5522222222222' } as any,
-    ]);
-    vi.mocked(sendAlertaWhatsApp)
-      .mockResolvedValueOnce({ success: false, error: 'timeout' })
-      .mockResolvedValueOnce({ success: true, messageId: 'msg-2' });
+    vi.mocked(prisma.configuracaoWhatsApp.findUnique).mockResolvedValue({
+      ativo: false,
+      whatsappInstStatus: 'CONECTADO',
+      whatsappDestino: '5511111111111',
+      whatsappGrupoJid: null,
+      classificacoesAlerta: [],
+    } as any);
+
+    await processAlertJob(
+      { type: 'alert:whatsapp', payload: whatsappPayload },
+      { emitCrossSite: mockEmitCrossSite, redis: mockRedis },
+    );
+
+    expect(sendWhatsAppText).not.toHaveBeenCalled();
+  });
+
+  it('does not send when whatsappInstStatus is not CONECTADO', async () => {
+    const { prisma } = await import('@cargo-sentinel/database');
+    const { sendWhatsAppText } = await import('../infra/zapi/zapi.service');
+    const mockRedis = { set: vi.fn().mockResolvedValue('OK') } as any;
+    vi.mocked(prisma.configuracaoWhatsApp.findUnique).mockResolvedValue({
+      ativo: true,
+      whatsappInstStatus: 'AGUARDANDO_QR',
+      whatsappDestino: '5511111111111',
+      whatsappGrupoJid: null,
+      classificacoesAlerta: [],
+    } as any);
+
+    await processAlertJob(
+      { type: 'alert:whatsapp', payload: whatsappPayload },
+      { emitCrossSite: mockEmitCrossSite, redis: mockRedis },
+    );
+
+    expect(sendWhatsAppText).not.toHaveBeenCalled();
+  });
+
+  it('sends to destino and grupo when ativo + CONECTADO + classificacao permitida', async () => {
+    const { prisma } = await import('@cargo-sentinel/database');
+    const { sendWhatsAppText, zapiConfigFrom } = await import('../infra/zapi/zapi.service');
+    const mockRedis = { set: vi.fn().mockResolvedValue('OK') } as any;
+    vi.mocked(prisma.configuracaoWhatsApp.findUnique).mockResolvedValue({
+      ativo: true,
+      whatsappInstStatus: 'CONECTADO',
+      whatsappDestino: '5511111111111',
+      whatsappGrupoJid: 'grupo-123-group',
+      whatsappGrupoNome: 'Grupo Teste',
+      classificacoesAlerta: ['SUSPEITO', 'CRITICO'],
+    } as any);
+    vi.mocked(zapiConfigFrom).mockReturnValue(zapiCfg);
+    vi.mocked(sendWhatsAppText).mockResolvedValue(undefined);
+
+    await processAlertJob(
+      { type: 'alert:whatsapp', payload: whatsappPayload },
+      { emitCrossSite: mockEmitCrossSite, redis: mockRedis },
+    );
+
+    expect(sendWhatsAppText).toHaveBeenCalledTimes(2);
+    expect(sendWhatsAppText).toHaveBeenCalledWith(zapiCfg, '5511111111111', expect.stringContaining('ABC1234'));
+    expect(sendWhatsAppText).toHaveBeenCalledWith(zapiCfg, 'grupo-123-group', expect.stringContaining('ABC1234'));
+  });
+
+  it('sends when classificacoesAlerta is empty (vazio = todos)', async () => {
+    const { prisma } = await import('@cargo-sentinel/database');
+    const { sendWhatsAppText, zapiConfigFrom } = await import('../infra/zapi/zapi.service');
+    const mockRedis = { set: vi.fn().mockResolvedValue('OK') } as any;
+    vi.mocked(prisma.configuracaoWhatsApp.findUnique).mockResolvedValue({
+      ativo: true,
+      whatsappInstStatus: 'CONECTADO',
+      whatsappDestino: '5511111111111',
+      whatsappGrupoJid: null,
+      classificacoesAlerta: [],
+    } as any);
+    vi.mocked(zapiConfigFrom).mockReturnValue(zapiCfg);
+    vi.mocked(sendWhatsAppText).mockResolvedValue(undefined);
+
+    await processAlertJob(
+      { type: 'alert:whatsapp', payload: whatsappPayload },
+      { emitCrossSite: mockEmitCrossSite, redis: mockRedis },
+    );
+
+    expect(sendWhatsAppText).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not throw and skips remaining sends when one send fails', async () => {
+    const { prisma } = await import('@cargo-sentinel/database');
+    const { sendWhatsAppText, zapiConfigFrom } = await import('../infra/zapi/zapi.service');
+    const mockRedis = { set: vi.fn().mockResolvedValue('OK') } as any;
+    vi.mocked(prisma.configuracaoWhatsApp.findUnique).mockResolvedValue({
+      ativo: true,
+      whatsappInstStatus: 'CONECTADO',
+      whatsappDestino: '5511111111111',
+      whatsappGrupoJid: 'grupo-123-group',
+      whatsappGrupoNome: 'Grupo Teste',
+      classificacoesAlerta: [],
+    } as any);
+    vi.mocked(zapiConfigFrom).mockReturnValue(zapiCfg);
+    vi.mocked(sendWhatsAppText)
+      .mockRejectedValueOnce(new Error('timeout'))
+      .mockResolvedValueOnce(undefined);
 
     await expect(
       processAlertJob(
@@ -171,6 +259,6 @@ describe('processAlertJob — alert:whatsapp', () => {
       ),
     ).resolves.not.toThrow();
 
-    expect(sendAlertaWhatsApp).toHaveBeenCalledTimes(2);
+    expect(sendWhatsAppText).toHaveBeenCalledTimes(2);
   });
 });

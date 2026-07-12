@@ -42,8 +42,8 @@ model Empresa {
   placas        Placa[]
   historico     ClassificacaoHistorico[]
   users         User[]
-  configuracoes ConfiguracaoAlerta[]
-  relatorios    Relatorio[]
+  configuracoesWhatsapp ConfiguracaoWhatsApp[]
+  relatorios            Relatorio[]
 }
 
 model User {
@@ -113,7 +113,6 @@ model Obra {
   empresa             Empresa              @relation(fields: [empresaId], references: [id])
   cameras             Camera[]
   eventos             Evento[]
-  configuracoes       ConfiguracaoAlerta[]
   placasClassificadas Placa[]              @relation("PlacaClassificacaoObra")
 
   @@index([empresaId])
@@ -163,24 +162,36 @@ model Evento {
   @@index([empresaId, placaId, timestamp(sort: Desc)])
 }
 
-// ============================================================
-// ConfiguracaoAlerta — WhatsApp alert recipients per obra
-// ALERTS-06: Admin configures phone numbers per obra
-// ALERTS-05: @@unique([obraId, telefone]) prevents duplicates
-// ============================================================
-model ConfiguracaoAlerta {
-  id        String   @id @default(cuid())
-  obraId    String
-  empresaId String
-  telefone  String   // E.164 format: +5511999999999
-  ativo     Boolean  @default(true)
-  createdAt DateTime @default(now())
-  obra      Obra     @relation(fields: [obraId], references: [id])
-  empresa   Empresa  @relation(fields: [empresaId], references: [id])
+enum WhatsAppInstanciaStatus {
+  DESCONECTADO
+  AGUARDANDO_QR
+  CONECTADO
+}
 
-  @@unique([obraId, telefone])
+// Configuração de WhatsApp/Z-API por empresa
+model ConfiguracaoWhatsApp {
+  id                  String                 @id @default(cuid())
+  empresaId           String
+  ativo               Boolean                @default(true)
+  // Z-API — credenciais da instância do cliente
+  zapiInstanceId      String?
+  zapiToken           String?
+  zapiClientToken     String?
+  // Status da instância
+  whatsappInstStatus  WhatsAppInstanciaStatus @default(DESCONECTADO)
+  // Destino: número individual ou grupo
+  whatsappDestino     String?
+  whatsappGrupoJid    String?
+  whatsappGrupoNome   String?
+  // Classificações que disparam alertas; vazio = todos
+  classificacoesAlerta Classificacao[]
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  empresa             Empresa                @relation(fields: [empresaId], references: [id])
+
+  @@unique([empresaId])
   @@index([empresaId])
-  @@index([obraId])
 }
 
 // ============================================================

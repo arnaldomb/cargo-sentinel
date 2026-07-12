@@ -9,7 +9,7 @@ import camerasRouter from './routes/cameras';
 import placasRouter from './routes/placas';
 import eventosRouter from './routes/eventos';
 import cameraStatusRouter from './routes/camera-status';
-import configuracoesAlertaRouter from './routes/configuracoes-alerta';
+import configuracoesWhatsappRouter from './routes/configuracoes-whatsapp';
 import relatoriosRouter from './routes/relatorios';
 import adminRouter from './routes/admin';
 import { protectedPipeline } from './middleware/pipeline';
@@ -60,7 +60,7 @@ app.use('/api/obras/:obraId/cameras', ...protectedPipeline, camerasRouter);
 app.use('/api/placas', ...protectedPipeline, placasRouter);
 app.use('/api/eventos', ...protectedPipeline, eventosRouter);
 app.use('/api/cameras', ...protectedPipeline, cameraStatusRouter);
-app.use('/api/configuracoes-alerta', ...protectedPipeline, configuracoesAlertaRouter);
+app.use('/api/configuracoes-whatsapp', ...protectedPipeline, configuracoesWhatsappRouter);
 app.use('/api/relatorios', ...protectedPipeline, relatoriosRouter);
 
 // Rotas Super Admin — SADMIN-01..04

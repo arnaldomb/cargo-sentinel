@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import { prisma } from '@cargo-sentinel/database';
 import { createRedisConnection } from '../services/redis';
-import { sendAlertaWhatsApp } from '../services/whatsapp';
+import { sendWhatsAppText, zapiConfigFrom } from '../infra/zapi/zapi.service';
 
 export type CrossSiteAlertPayload = {
   empresaId: string;
@@ -112,37 +112,51 @@ export async function processAlertJob(
       return;
     }
 
-    // Busca números configurados para a obra (ALERTS-06)
-    const configuracoes = await prisma.configuracaoAlerta.findMany({
-      where: {
-        obraId: payload.obraId,
-        empresaId: payload.empresaId,
-        ativo: true,
-      },
-      select: { telefone: true },
-    });
-
-    if (configuracoes.length === 0) {
-      console.log(
-        `[alert-worker] nenhum número configurado para obra ${payload.obraId}`,
-      );
-      return;
-    }
-
     const mensagem = formatWhatsAppMessage(payload);
 
-    // ALERTS-03: concorrência 1 — enviados sequencialmente por ordem do worker
-    for (const config of configuracoes) {
-      const result = await sendAlertaWhatsApp(config.telefone, mensagem);
-      if (!result.success) {
-        console.error(
-          `[alert-worker] falha ao enviar WhatsApp para ${config.telefone}: ${result.error}`,
-        );
-        // Não relança — continua para próximos números. Falha de 1 não cancela os demais.
-      } else {
-        console.log(
-          `[alert-worker] WhatsApp enviado para ${config.telefone} (msgId: ${result.messageId})`,
-        );
+    // Busca configuração Z-API da empresa
+    const configWhatsApp = await prisma.configuracaoWhatsApp.findUnique({
+      where: { empresaId: payload.empresaId },
+    });
+
+    if (configWhatsApp && configWhatsApp.ativo && configWhatsApp.whatsappInstStatus === 'CONECTADO') {
+      const zapiCfg = zapiConfigFrom(configWhatsApp);
+      if (zapiCfg) {
+        // Verifica se a classificação está na lista de alertas (ou lista vazia = todos)
+        const deveEnviarClassificacao =
+          configWhatsApp.classificacoesAlerta.length === 0 ||
+          configWhatsApp.classificacoesAlerta.includes(payload.classificacao);
+
+        if (deveEnviarClassificacao) {
+          // Envia para número individual, se configurado
+          if (configWhatsApp.whatsappDestino) {
+            try {
+              await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappDestino, mensagem);
+              console.log(
+                `[alert-worker] WhatsApp (Z-API) enviado para número ${configWhatsApp.whatsappDestino}`,
+              );
+            } catch (err) {
+              console.error(
+                `[alert-worker] falha ao enviar WhatsApp (Z-API) para ${configWhatsApp.whatsappDestino}:`,
+                err,
+              );
+            }
+          }
+          // Envia para grupo, se configurado
+          if (configWhatsApp.whatsappGrupoJid) {
+            try {
+              await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappGrupoJid, mensagem);
+              console.log(
+                `[alert-worker] WhatsApp (Z-API) enviado para grupo ${configWhatsApp.whatsappGrupoNome}`,
+              );
+            } catch (err) {
+              console.error(
+                `[alert-worker] falha ao enviar WhatsApp (Z-API) para grupo ${configWhatsApp.whatsappGrupoJid}:`,
+                err,
+              );
+            }
+          }
+        }
       }
     }
   }
