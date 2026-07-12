@@ -21,6 +21,10 @@ services:
   # Expose app services directly (bypass Traefik for local dev)
   api:
     ports: ["4000:4000"]
+    environment:
+      # Browser-facing URL — thumbnails must resolve against the host the
+      # browser is actually using (localhost), not the production domain.
+      THUMBNAIL_PROXY_URL: "http://localhost:3000/api/image-proxy"
 
   web:
     ports: ["3000:3000"]
