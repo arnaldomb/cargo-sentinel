@@ -110,9 +110,10 @@ Recent decisions affecting current work:
 | 260712-o0s | Portar integração WhatsApp via Z-API do opencheck para cargo-sentinel, substituindo Evolution API, com provisionamento via superadmin | 2026-07-12 | df3e3ec | [260712-o0s-portar-integra-o-whatsapp-via-z-api-do-o](./quick/260712-o0s-portar-integra-o-whatsapp-via-z-api-do-o/) |
 | 260712-rh1 | Corrigir upsert inválido de Obra em seed.ts (empresaId_nome não existe) | 2026-07-12 | 2ae6e5f | [260712-rh1-corrigir-upsert-inv-lido-de-obra-em-seed](./quick/260712-rh1-corrigir-upsert-inv-lido-de-obra-em-seed/) |
 | 260712-rtv | Corrigir cookie de sessão Auth.js quebrado em dev local via docker (NODE_ENV/AUTH_COOKIE_DOMAIN de produção) | 2026-07-12 | 10fce52 | [260712-rtv-corrigir-cookie-de-sess-o-auth-js-quebra](./quick/260712-rtv-corrigir-cookie-de-sess-o-auth-js-quebra/) |
+| 260712-sft | Completar painel super admin: fix redirect SUPER_ADMIN, shell de abas Geral/Usuários/WhatsApp por empresa, CRUD de usuários | 2026-07-12 | d467812 | [260712-sft-completar-painel-super-admin-fix-redirec](./quick/260712-sft-completar-painel-super-admin-fix-redirec/) |
 
 ## Session Continuity
 
-Last session: 2026-07-12T20:17:44.898Z
-Stopped at: Completed quick task 260712-o0s: Portar integração WhatsApp via Z-API do opencheck para cargo-sentinel, substituindo Evolution API, com provisionamento via superadmin
+Last session: 2026-07-12T23:28:34.811Z
+Stopped at: Completed quick task 260712-sft: Completar painel super admin (redirect fix, shell de abas, CRUD de usuários)
 Resume file: None
