@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { X, LayoutDashboard, Bell, Search, FileText, Settings, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
+import { X, LayoutDashboard, Search, FileText, Settings, ChevronDown, ChevronUp, ShieldAlert, MessageCircle } from 'lucide-react';
 import type { CameraStatusItem } from '@/lib/dashboard';
 
 type SidebarProps = {
@@ -95,9 +95,9 @@ export function Sidebar({ cameras, userName, userRole, isOpen, onClose }: Sideba
           )}
 
           {userRole === 'ADMIN_EMPRESA' && (
-            <Link href="/configuracoes/alertas" className={navClass(pathname.startsWith('/configuracoes'))} aria-current={pathname.startsWith('/configuracoes') ? 'page' : undefined}>
-              <Bell size={16} aria-hidden="true" />
-              Alertas WhatsApp
+            <Link href="/configuracoes/whatsapp" className={navClass(pathname.startsWith('/configuracoes/whatsapp'))} aria-current={pathname.startsWith('/configuracoes/whatsapp') ? 'page' : undefined}>
+              <MessageCircle size={16} aria-hidden="true" />
+              WhatsApp
             </Link>
           )}
         </nav>
