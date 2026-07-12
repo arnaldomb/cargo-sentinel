@@ -3,6 +3,7 @@ import { prisma } from '@cargo-sentinel/database';
 import bcrypt from 'bcryptjs';
 import { EncryptJWT } from 'jose';
 import { hkdf } from '@panva/hkdf';
+import { getStatus, disconnect, zapiConfigFrom } from '../infra/zapi/zapi.service';
 
 const router: RouterType = Router();
 
@@ -226,6 +227,151 @@ router.post('/empresas/:id/impersonate', async (req, res) => {
     .encrypt(key);
 
   res.json({ token, expiresAt: expiresAt.toISOString() });
+});
+
+// ============================================================
+// WhatsApp (Z-API) — provisionamento por empresa
+// O SUPERADMIN cadastra/valida a instância Z-API (instanceId + token +
+// clientToken) por empresa. O tenant nunca vê as credenciais brutas
+// (ver apps/api/src/routes/configuracoes-whatsapp.ts).
+// ============================================================
+
+// GET /api/admin/empresas/:id/whatsapp
+router.get('/empresas/:id/whatsapp', async (req, res) => {
+  const { id } = req.params;
+
+  const cfg = await prisma.configuracaoWhatsApp.findUnique({
+    where: { empresaId: id },
+    select: {
+      zapiInstanceId: true,
+      zapiToken: true,
+      zapiClientToken: true,
+      whatsappInstStatus: true,
+      whatsappGrupoNome: true,
+    },
+  });
+
+  if (!cfg?.zapiInstanceId) {
+    return res.json({ vinculada: false });
+  }
+
+  return res.json({
+    vinculada: true,
+    instanceId: cfg.zapiInstanceId,
+    tokenMask: cfg.zapiToken ? `${cfg.zapiToken.slice(0, 4)}…${cfg.zapiToken.slice(-4)}` : null,
+    temClientToken: !!cfg.zapiClientToken,
+    status: cfg.whatsappInstStatus,
+    grupoNome: cfg.whatsappGrupoNome ?? null,
+  });
+});
+
+// PUT /api/admin/empresas/:id/whatsapp
+router.put('/empresas/:id/whatsapp', async (req, res) => {
+  const { id } = req.params;
+  const body = req.body as { instanceId?: unknown; token?: unknown; clientToken?: unknown };
+
+  const instanceId = typeof body.instanceId === 'string' ? body.instanceId.trim() : '';
+  const token = typeof body.token === 'string' ? body.token.trim() : '';
+  const clientToken = typeof body.clientToken === 'string' && body.clientToken.trim() ? body.clientToken.trim() : null;
+
+  if (!instanceId || !token) {
+    res.status(400).json({ error: 'instanceId e token são obrigatórios' });
+    return;
+  }
+
+  const empresa = await prisma.empresa.findUnique({ where: { id } });
+  if (!empresa) {
+    res.status(404).json({ error: 'Empresa não encontrada' });
+    return;
+  }
+
+  const zapi = zapiConfigFrom({ zapiInstanceId: instanceId, zapiToken: token, zapiClientToken: clientToken })!;
+
+  let conectado = false;
+  try {
+    const status = await getStatus(zapi);
+    conectado = status.connected;
+  } catch (err) {
+    res.status(400).json({
+      error: `Credenciais inválidas ou instância inacessível na Z-API: ${String(err instanceof Error ? err.message : err).slice(0, 200)}`,
+    });
+    return;
+  }
+
+  const novoStatus = conectado ? 'CONECTADO' : 'DESCONECTADO';
+
+  await prisma.configuracaoWhatsApp.upsert({
+    where: { empresaId: id },
+    update: {
+      zapiInstanceId: instanceId,
+      zapiToken: token,
+      zapiClientToken: clientToken,
+      whatsappInstStatus: novoStatus,
+      ...(conectado ? { ativo: true } : {}),
+    },
+    create: {
+      empresaId: id,
+      ativo: conectado,
+      zapiInstanceId: instanceId,
+      zapiToken: token,
+      zapiClientToken: clientToken,
+      whatsappInstStatus: novoStatus,
+    },
+  });
+
+  res.json({ ok: true, status: novoStatus });
+});
+
+// POST /api/admin/empresas/:id/whatsapp/desconectar
+router.post('/empresas/:id/whatsapp/desconectar', async (req, res) => {
+  const { id } = req.params;
+
+  const cfg = await prisma.configuracaoWhatsApp.findUnique({
+    where: { empresaId: id },
+    select: { zapiInstanceId: true, zapiToken: true, zapiClientToken: true },
+  });
+
+  const zapi = zapiConfigFrom(cfg);
+  if (!zapi) {
+    res.status(400).json({ error: 'Instância não vinculada.' });
+    return;
+  }
+
+  await disconnect(zapi);
+  await prisma.configuracaoWhatsApp.updateMany({
+    where: { empresaId: id },
+    data: { whatsappInstStatus: 'DESCONECTADO' },
+  });
+
+  res.json({ ok: true, status: 'DESCONECTADO' });
+});
+
+// DELETE /api/admin/empresas/:id/whatsapp
+router.delete('/empresas/:id/whatsapp', async (req, res) => {
+  const { id } = req.params;
+
+  const cfg = await prisma.configuracaoWhatsApp.findUnique({
+    where: { empresaId: id },
+    select: { zapiInstanceId: true, zapiToken: true, zapiClientToken: true },
+  });
+
+  const zapi = zapiConfigFrom(cfg);
+  if (zapi) await disconnect(zapi).catch(() => {});
+
+  await prisma.configuracaoWhatsApp.updateMany({
+    where: { empresaId: id },
+    data: {
+      zapiInstanceId: null,
+      zapiToken: null,
+      zapiClientToken: null,
+      whatsappInstStatus: 'DESCONECTADO',
+      whatsappGrupoJid: null,
+      whatsappGrupoNome: null,
+      ativo: false,
+    },
+  });
+
+  res.json({ ok: true });
 });
 
 export default router;
