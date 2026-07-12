@@ -108,6 +108,7 @@ Recent decisions affecting current work:
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260712-o0s | Portar integração WhatsApp via Z-API do opencheck para cargo-sentinel, substituindo Evolution API, com provisionamento via superadmin | 2026-07-12 | df3e3ec | [260712-o0s-portar-integra-o-whatsapp-via-z-api-do-o](./quick/260712-o0s-portar-integra-o-whatsapp-via-z-api-do-o/) |
+| 260712-rh1 | Corrigir upsert inválido de Obra em seed.ts (empresaId_nome não existe) | 2026-07-12 | 2ae6e5f | [260712-rh1-corrigir-upsert-inv-lido-de-obra-em-seed](./quick/260712-rh1-corrigir-upsert-inv-lido-de-obra-em-seed/) |
 
 ## Session Continuity
 
