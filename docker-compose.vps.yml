@@ -82,34 +82,6 @@ services:
       - "traefik.http.routers.sentinel-storage.tls.certresolver=letsencrypt"
       - "traefik.http.services.sentinel-storage.loadbalancer.server.port=3900"
 
-  evolution-api:
-    image: atendai/evolution-api:v2.2.3
-    container_name: cargo-sentinel_evolution
-    restart: unless-stopped
-    environment:
-      SERVER_URL: http://evolution-api:8080
-      AUTHENTICATION_TYPE: apikey
-      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
-      DATABASE_ENABLED: "true"
-      DATABASE_PROVIDER: "postgresql"
-      DATABASE_URL: postgresql://${POSTGRES_USER:-sentinel}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-cargo_sentinel}
-      REDIS_ENABLED: "true"
-      REDIS_URI: redis://redis:6379
-      REDIS_PREFIX_KEY: evolution
-      WEBHOOK_GLOBAL_ENABLED: "false"
-      STORE_MESSAGES: "false"
-      STORE_MESSAGE_UP: "false"
-      STORE_CONTACTS: "false"
-      STORE_CHATS: "false"
-      DEL_INSTANCE: "false"
-    volumes:
-      - evolution-instances:/evolution/instances
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - internal
-
   migrate:
     image: ghcr.io/arnaldomb/cargo-sentinel-migrate:latest
     restart: "no"
@@ -147,10 +119,10 @@ services:
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
       # Miniaturas via proxy do Next.js (mesmo domínio do portal)
       THUMBNAIL_PROXY_URL: ${WEB_PUBLIC_URL}/api/image-proxy
-      # Evolution API — WhatsApp
-      EVOLUTION_API_URL: http://evolution-api:8080
-      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
-      EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME:-cargo-sentinel}
+      # Z-API — Client-Token global opcional (fallback quando a empresa
+      # não tem um Client-Token próprio); credenciais por empresa ficam
+      # no banco (ConfiguracaoWhatsApp), provisionadas pelo SUPER_ADMIN.
+      ZAPI_CLIENT_TOKEN: ${ZAPI_CLIENT_TOKEN}
     depends_on:
       postgres:
         condition: service_healthy
@@ -222,4 +194,3 @@ volumes:
   redis-data:
   garage-meta:
   garage-data:
-  evolution-instances:

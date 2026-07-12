@@ -86,10 +86,10 @@ services:
       # AWS SDK v3 + Garage checksum compatibility
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
-      # Evolution API — WhatsApp alerts (ALERTS-01, ALERTS-03)
-      EVOLUTION_API_URL: http://evolution-api:8080
-      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
-      EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME:-cargo-sentinel}
+      # Z-API — Client-Token global opcional (fallback quando a empresa não
+      # tem um Client-Token próprio); credenciais por empresa ficam no banco
+      # (ConfiguracaoWhatsApp), provisionadas pelo SUPER_ADMIN.
+      ZAPI_CLIENT_TOKEN: ${ZAPI_CLIENT_TOKEN}
       # Thumbnail proxy URL — browser loads images via Next.js proxy (no public Garage tunnel)
       THUMBNAIL_PROXY_URL: "${WEB_PUBLIC_URL}/api/image-proxy"
     ports:
@@ -107,9 +107,6 @@ services:
         condition: service_healthy
       garage:
         condition: service_healthy
-      evolution-api:
-        # evolution-api can be slow to start; keep service_started to avoid blocking api
-        condition: service_started
     networks:
       - sentinel
     labels:
@@ -119,46 +116,6 @@ services:
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       - "traefik.http.services.api.loadbalancer.server.port=4000"
-
-  # ============================================================
-  # evolution-api — WhatsApp messaging via Evolution API v2.2.3
-  # HARD-PINNED: v2.2.3 — highest stable v2 tag on Docker Hub (2025-02-03).
-  # DO NOT upgrade to v2.4.0+ (requires external license server activation
-  # — breaks self-hosted SLAs). v2.3.7 tag does not exist in atendai registry.
-  # ALERTS-01: internal only, not exposed via Traefik
-  # ============================================================
-  evolution-api:
-    image: atendai/evolution-api:v2.2.3
-    restart: "no"
-    environment:
-      SERVER_URL: ${EVOLUTION_SERVER_URL:-http://evolution-api:8080}
-      AUTHENTICATION_TYPE: apikey
-      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
-      DATABASE_ENABLED: "true"
-      DATABASE_PROVIDER: "postgresql"
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      REDIS_ENABLED: "true"
-      REDIS_URI: redis://redis:6379
-      REDIS_PREFIX_KEY: evolution
-      WEBHOOK_GLOBAL_ENABLED: "false"
-      STORE_MESSAGES: "false"
-      STORE_MESSAGE_UP: "false"
-      STORE_CONTACTS: "false"
-      STORE_CHATS: "false"
-      DEL_INSTANCE: "false"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ || exit 1"]
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    volumes:
-      - evolution-instances:/evolution/instances
-    depends_on:
-      redis:
-        condition: service_healthy
-    networks:
-      - sentinel
 
   # ============================================================
   # web — Next.js 15 dashboard
@@ -248,4 +205,3 @@ volumes:
   redis-data:
   garage-meta:
   garage-data:
-  evolution-instances:

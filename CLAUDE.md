@@ -27,7 +27,7 @@ Não é só um receptor LPR — é inteligência operacional para prevenção de
 | Image storage | **Garage** | 2.x (v2.3+ stable) | MinIO archived April 2026 (entered maintenance mode Dec 2025); Garage is the community default replacement, single Go binary, Apache-compatible, Docker-ready | HIGH |
 | Monorepo | Turborepo + pnpm | Turborepo 2.x | Unchanged recommendation; proven for Next.js + Express + shared packages | HIGH |
 | Auth | Auth.js (NextAuth) | **v5** | v5 is current; JWT sessions for edge/Docker deploy; role embedded in token | HIGH |
-| WhatsApp alerts | Evolution API | **v2.3.7** (pin, do NOT upgrade to 2.4.0-rc) | v2.4.0 requires external license server activation — self-hosted SLAs break when licensing endpoint is down | MEDIUM |
+| WhatsApp alerts | Z-API | REST HTTP API (per-instance) | Decisão revista (2026-07-12): substitui Evolution API — sem servidor próprio, sem licença externa, provisionamento por instância centralizado pelo SUPER_ADMIN | HIGH |
 | Deploy | Docker Compose + Traefik | Traefik v3 | Native Docker provider; label-based routing; automatic Let's Encrypt; Hostinger VPS compatible | HIGH |
 | Cache / pub-sub | Redis | 7.x | Required by Socket.IO Redis adapter; also serves rate limiting and alert deduplication | HIGH |
 ## Key Decisions
@@ -45,7 +45,11 @@ Não é só um receptor LPR — é inteligência operacional para prevenção de
 - Server pushes LPR events to dashboards
 - Client sends classification updates back (vehicle risk level changes)
 - Server must broadcast that classification to all open sessions for that tenant
-### 5. Evolution API v2.3.7 — pin and monitor
+### 5. Z-API for WhatsApp alerts (replaces Evolution API)
+**Decisão revista (2026-07-12): Z-API substitui Evolution API — provisionamento centralizado por superadmin, sem servidor de licença externo.**
+- SUPER_ADMIN cadastra/valida a instância Z-API (instanceId + token + clientToken) por empresa em `/admin/empresas/[id]/whatsapp` — credenciais nunca ficam visíveis para o tenant
+- Tenant (ADMIN_EMPRESA) só vê status/QR/grupos/config de envio/testar em `/configuracoes/whatsapp`
+- Cliente HTTP simples (`apps/api/src/infra/zapi/zapi.service.ts`) — sem processo próprio, sem banco de dados dedicado, sem `docker-compose` service
 ### 6. Auth.js v5 with JWT sessions (not database sessions)
 ### 7. Turborepo monorepo structure
 ### 8. Traefik v3 routing strategy
@@ -59,7 +63,7 @@ Não é só um receptor LPR — é inteligência operacional para prevenção de
 | **Next.js 14** | Not the current stable version. Starting on 14 means a near-term upgrade with async params breaking changes. Start on 15. |
 | **PostgreSQL RLS at launch** | Correct concept, wrong timing. Prisma does not generate RLS DDL — you must manage migration SQL manually. The tenantId middleware pattern gives 95% of the safety with 10% of the complexity. Add real RLS in a hardening phase post-MVP. |
 | **SSE (Server-Sent Events)** | Unidirectional only. Classification updates flow client → server, making SSE insufficient without a separate HTTP request channel. Socket.IO already handles both directions cleanly. |
-| **Evolution API v2.4.0+** | v2.4.0 requires external license server activation before serving any traffic. Self-hosted reliability becomes dependent on Evolution Foundation infrastructure uptime. Pin to v2.3.7 until licensing SLAs are documented. |
+| **Evolution API (any version)** | Replaced by Z-API (2026-07-12 decision). Required its own service (Docker container + Postgres/Redis integration), and v2.4.0+ required external license server activation before serving any traffic — self-hosted reliability became dependent on Evolution Foundation infrastructure uptime. Z-API is a plain REST HTTP API with no self-hosted process to run. |
 | **Schema-per-tenant (separate PostgreSQL schemas)** | Prisma does not support schema-per-tenant natively — requires raw SQL for schema switching and breaks migrations. Row-level isolation is the Prisma-native approach. |
 | **Prisma database sessions (NextAuth)** | Adds 1-2 DB queries per request. JWT sessions with tenantId embedded are stateless and work across API + web without shared session store. |
 | **Tailwind CSS 4** | Breaking changes from v3. Evolution API itself migrated to Tailwind v4 in their new dashboard, which is evidence of active churn. For a production project starting now, stay on Tailwind v3 until the ecosystem (shadcn/ui, headlessui, etc.) fully migrates. |
@@ -73,7 +77,6 @@ Não é só um receptor LPR — é inteligência operacional para prevenção de
 | `socket.io` | `^4.7.0` | Last major stable; Redis adapter compatible |
 | `@socket.io/redis-adapter` | `^8.x` | Must match socket.io major version |
 | `next-auth` / `auth.js` | `^5.0.0` | v5 is the current stable (was beta for 2 years, now stable) |
-| `evolution-api` (Docker tag) | `2.3.7` | Pin hard; do NOT use `latest` — v2.4.0 has breaking license activation |
 | `garage` (Docker tag) | `v2.3.0` or latest `v2` | Avoid `latest` tag; pin to major |
 | `traefik` (Docker image) | `v3` | v3 is current stable; v2 is legacy |
 | `tailwindcss` | `^3.4.x` | Stay on v3; do not upgrade to v4 until shadcn/ui fully supports it |
