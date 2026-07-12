@@ -110,6 +110,12 @@ export default async function AdminPage() {
                   <td className="px-4 py-3 text-gray-600 text-xs">{formatDate(empresa.createdAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/empresas/${empresa.id}/whatsapp`}
+                        className="text-xs px-2 py-1 rounded font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                      >
+                        WhatsApp
+                      </Link>
                       <SuspendButton empresaId={empresa.id} status={empresa.status} />
                       <ImpersonateButton empresaId={empresa.id} />
                     </div>
