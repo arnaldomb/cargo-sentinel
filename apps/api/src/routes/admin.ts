@@ -143,6 +143,89 @@ router.post('/empresas', async (req, res) => {
 });
 
 // ============================================================
+// GET /api/admin/empresas/:id
+// Detalhe da empresa com contadores.
+// SADMIN-EMPRESA-DETAIL
+// ============================================================
+router.get('/empresas/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const empresa = await prisma.empresa.findUnique({
+    where: { id },
+    include: {
+      _count: {
+        select: {
+          obras: true,
+          cameras: true,
+          eventos: true,
+          users: true,
+        },
+      },
+    },
+  });
+
+  if (!empresa) {
+    res.status(404).json({ error: 'Empresa não encontrada' });
+    return;
+  }
+
+  res.json(empresa);
+});
+
+// ============================================================
+// PATCH /api/admin/empresas/:id
+// Edita nome/cnpj da empresa (genérico, separado de /status).
+// SADMIN-EMPRESA-DETAIL
+// ============================================================
+router.patch('/empresas/:id', async (req, res) => {
+  const { id } = req.params;
+  const { nome, cnpj } = req.body as { nome?: unknown; cnpj?: unknown };
+
+  const data: { nome?: string; cnpj?: string } = {};
+
+  if (nome !== undefined) {
+    if (typeof nome !== 'string' || nome.trim().length < 2) {
+      res.status(400).json({ error: 'nome deve ter pelo menos 2 caracteres' });
+      return;
+    }
+    data.nome = nome.trim();
+  }
+
+  if (cnpj !== undefined) {
+    if (typeof cnpj !== 'string' || cnpj.replace(/\D/g, '').length < 14) {
+      res.status(400).json({ error: 'cnpj inválido (mínimo 14 dígitos)' });
+      return;
+    }
+    data.cnpj = cnpj.replace(/\D/g, '');
+  }
+
+  try {
+    const empresa = await prisma.empresa.update({ where: { id }, data });
+    res.json(empresa);
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2002'
+    ) {
+      res.status(400).json({ error: 'CNPJ já cadastrado' });
+      return;
+    }
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2025'
+    ) {
+      res.status(404).json({ error: 'Empresa não encontrada' });
+      return;
+    }
+    throw err;
+  }
+});
+
+// ============================================================
 // PATCH /api/admin/empresas/:id/status
 // Alterna status entre ATIVO e SUSPENSO.
 // SADMIN-03
@@ -227,6 +310,196 @@ router.post('/empresas/:id/impersonate', async (req, res) => {
     .encrypt(key);
 
   res.json({ token, expiresAt: expiresAt.toISOString() });
+});
+
+// ============================================================
+// GET /api/admin/empresas/:id/usuarios
+// Lista usuários da empresa.
+// SADMIN-USUARIOS-CRUD
+// ============================================================
+router.get('/empresas/:id/usuarios', async (req, res) => {
+  const { id } = req.params;
+
+  const empresa = await prisma.empresa.findUnique({ where: { id } });
+  if (!empresa) {
+    res.status(404).json({ error: 'Empresa não encontrada' });
+    return;
+  }
+
+  const usuarios = await prisma.user.findMany({
+    where: { empresaId: id },
+    select: {
+      id: true,
+      nome: true,
+      email: true,
+      role: true,
+      ativo: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  res.json(usuarios);
+});
+
+// ============================================================
+// POST /api/admin/empresas/:id/usuarios
+// Cria usuário ADMIN_EMPRESA ou OPERADOR para a empresa.
+// SADMIN-USUARIOS-CRUD — nunca permite criar SUPER_ADMIN
+// ============================================================
+router.post('/empresas/:id/usuarios', async (req, res) => {
+  const { id } = req.params;
+  const { nome, email, senha, role } = req.body as {
+    nome?: unknown;
+    email?: unknown;
+    senha?: unknown;
+    role?: unknown;
+  };
+
+  if (typeof nome !== 'string' || nome.trim().length < 2) {
+    res.status(400).json({ error: 'nome deve ter pelo menos 2 caracteres' });
+    return;
+  }
+  if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    res.status(400).json({ error: 'email inválido' });
+    return;
+  }
+  if (typeof senha !== 'string' || senha.length < 8) {
+    res.status(400).json({ error: 'senha deve ter pelo menos 8 caracteres' });
+    return;
+  }
+  if (role !== 'ADMIN_EMPRESA' && role !== 'OPERADOR') {
+    res.status(400).json({ error: 'role deve ser ADMIN_EMPRESA ou OPERADOR' });
+    return;
+  }
+
+  const empresa = await prisma.empresa.findUnique({ where: { id } });
+  if (!empresa) {
+    res.status(404).json({ error: 'Empresa não encontrada' });
+    return;
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(senha, 10);
+    const user = await prisma.user.create({
+      data: {
+        email: email.toLowerCase(),
+        passwordHash,
+        nome: nome.trim(),
+        role,
+        empresaId: id,
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        role: true,
+        ativo: true,
+        createdAt: true,
+      },
+    });
+    res.status(201).json(user);
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2002'
+    ) {
+      res.status(409).json({ error: 'E-mail já cadastrado' });
+      return;
+    }
+    throw err;
+  }
+});
+
+// ============================================================
+// PUT /api/admin/empresas/:id/usuarios/:usuarioId
+// Edita nome/role/ativo de um usuário da empresa.
+// SADMIN-USUARIOS-CRUD — nunca permite editar/rebaixar SUPER_ADMIN
+// ============================================================
+router.put('/empresas/:id/usuarios/:usuarioId', async (req, res) => {
+  const { id, usuarioId } = req.params;
+  const { nome, role, ativo } = req.body as {
+    nome?: unknown;
+    role?: unknown;
+    ativo?: unknown;
+  };
+
+  const target = await prisma.user.findFirst({ where: { id: usuarioId, empresaId: id } });
+  if (!target) {
+    res.status(404).json({ error: 'Usuário não encontrado' });
+    return;
+  }
+  if (target.role === 'SUPER_ADMIN') {
+    res.status(403).json({ error: 'Não é permitido editar um SUPER_ADMIN' });
+    return;
+  }
+
+  const data: { nome?: string; role?: 'ADMIN_EMPRESA' | 'OPERADOR'; ativo?: boolean } = {};
+
+  if (nome !== undefined) {
+    if (typeof nome !== 'string' || nome.trim().length < 2) {
+      res.status(400).json({ error: 'nome deve ter pelo menos 2 caracteres' });
+      return;
+    }
+    data.nome = nome.trim();
+  }
+  if (role !== undefined) {
+    if (role !== 'ADMIN_EMPRESA' && role !== 'OPERADOR') {
+      res.status(400).json({ error: 'role deve ser ADMIN_EMPRESA ou OPERADOR' });
+      return;
+    }
+    data.role = role;
+  }
+  if (ativo !== undefined) {
+    if (typeof ativo !== 'boolean') {
+      res.status(400).json({ error: 'ativo deve ser boolean' });
+      return;
+    }
+    data.ativo = ativo;
+  }
+
+  const user = await prisma.user.update({
+    where: { id: usuarioId },
+    data,
+    select: {
+      id: true,
+      nome: true,
+      email: true,
+      role: true,
+      ativo: true,
+      createdAt: true,
+    },
+  });
+
+  res.json(user);
+});
+
+// ============================================================
+// POST /api/admin/empresas/:id/usuarios/:usuarioId/resetar-senha
+// Reseta a senha de um usuário da empresa.
+// SADMIN-USUARIOS-CRUD
+// ============================================================
+router.post('/empresas/:id/usuarios/:usuarioId/resetar-senha', async (req, res) => {
+  const { id, usuarioId } = req.params;
+  const { senha } = req.body as { senha?: unknown };
+
+  if (typeof senha !== 'string' || senha.length < 8) {
+    res.status(400).json({ error: 'senha deve ter pelo menos 8 caracteres' });
+    return;
+  }
+
+  const target = await prisma.user.findFirst({ where: { id: usuarioId, empresaId: id } });
+  if (!target) {
+    res.status(404).json({ error: 'Usuário não encontrado' });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(senha, 10);
+  await prisma.user.update({ where: { id: usuarioId }, data: { passwordHash } });
+
+  res.json({ success: true });
 });
 
 // ============================================================
