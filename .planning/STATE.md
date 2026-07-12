@@ -101,9 +101,16 @@ Recent decisions affecting current work:
 ### Blockers/Concerns
 
 - Nenhum blocker ativo
+- Testes pré-existentes falhando (não relacionados a este quick task): `eventos.test.ts` / `placas.test.ts` — mock de `../services/garage` incompleto, faltando `getThumbnailProxyUrl`. Ver `.planning/quick/260712-o0s-portar-integra-o-whatsapp-via-z-api-do-o/deferred-items.md`.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260712-o0s | Portar integração WhatsApp via Z-API do opencheck para cargo-sentinel, substituindo Evolution API, com provisionamento via superadmin | 2026-07-12 | df3e3ec | [260712-o0s-portar-integra-o-whatsapp-via-z-api-do-o](./quick/260712-o0s-portar-integra-o-whatsapp-via-z-api-do-o/) |
 
 ## Session Continuity
 
-Last session: 2026-06-21T23:11:27.080Z
-Stopped at: Completed 07-04-PLAN.md
+Last session: 2026-07-12T20:17:44.898Z
+Stopped at: Completed quick task 260712-o0s: Portar integração WhatsApp via Z-API do opencheck para cargo-sentinel, substituindo Evolution API, com provisionamento via superadmin
 Resume file: None
