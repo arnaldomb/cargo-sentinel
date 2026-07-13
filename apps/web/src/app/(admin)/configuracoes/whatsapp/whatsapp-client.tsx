@@ -57,6 +57,27 @@ export function WhatsAppClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Polling automático enquanto a instância está vinculada mas ainda não conectada
+  // (cobre tanto o período logo após escanear o QR quanto reload da página no meio da conexão).
+  useEffect(() => {
+    if (!config?.instanciaVinculada || config.whatsappInstStatus === 'CONECTADO') {
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/configuracoes-whatsapp-proxy/status', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        setConfig((prev) => (prev ? { ...prev, whatsappInstStatus: data.status } : prev));
+      } catch {
+        // silencioso — próxima tentativa do polling tenta de novo
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [config?.instanciaVinculada, config?.whatsappInstStatus]);
+
   // Salvar configuração de envio
   async function handleSave() {
     setSaving(true);
@@ -238,6 +259,11 @@ export function WhatsAppClient() {
                   {config?.whatsappInstStatus}
                 </span>
               </span>
+              {config?.whatsappInstStatus !== 'CONECTADO' && (
+                <span className="ml-2 text-xs text-slate-400">
+                  Aguardando conexão... verificando automaticamente
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap gap-3">
               <button
