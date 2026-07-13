@@ -95,7 +95,7 @@ export function WhatsAppProvisionClient({ empresaId }: { empresaId: string }) {
   }
 
   async function removerWhatsapp() {
-    if (!window.confirm('Remover o vínculo Z-API desta empresa? As credenciais serão apagadas.')) {
+    if (!window.confirm('Remover o vínculo WhatsApp desta empresa? As credenciais serão apagadas.')) {
       return;
     }
     setRemovendo(true);
@@ -197,18 +197,18 @@ export function WhatsAppProvisionClient({ empresaId }: { empresaId: string }) {
           <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
             <MessageCircle className="h-4 w-4 text-green-600" />
             <h3 className="font-heading font-semibold text-gray-800">
-              {editando ? 'Editar credenciais Z-API' : 'Vincular instância Z-API'}
+              {editando ? 'Editar credenciais' : 'Vincular instância'}
             </h3>
           </div>
           {editando ? (
             <p className="text-sm text-gray-500">
-              As credenciais serão revalidadas na Z-API ao salvar. Por segurança, informe novamente o{' '}
+              As credenciais serão revalidadas ao salvar. Por segurança, informe novamente o{' '}
               <strong>Token</strong> completo (e o Client-Token, se aplicável) — eles não são pré-preenchidos.
             </p>
           ) : (
             <p className="text-sm text-gray-500">
-              Crie a instância no painel Z-API e cole aqui o <strong>ID</strong> e o <strong>Token</strong> da instância.
-              As credenciais são validadas na Z-API antes de salvar.
+              Crie a instância no painel do provedor e cole aqui o <strong>ID</strong> e o <strong>Token</strong> da instância.
+              As credenciais são validadas antes de salvar.
             </p>
           )}
           <div>
@@ -247,7 +247,7 @@ export function WhatsAppProvisionClient({ empresaId }: { empresaId: string }) {
               className="flex items-center gap-2 rounded-lg bg-ggtech-blue px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
             >
               {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {salvando ? 'Validando na Z-API...' : editando ? 'Salvar credenciais' : 'Vincular instância'}
+              {salvando ? 'Validando...' : editando ? 'Salvar credenciais' : 'Vincular instância'}
             </button>
             {editando && (
               <button

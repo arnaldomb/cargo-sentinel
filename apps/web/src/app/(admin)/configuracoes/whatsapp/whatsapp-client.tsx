@@ -111,7 +111,7 @@ export function WhatsAppClient() {
     }
   }
 
-  // Verificar status da instância Z-API
+  // Verificar status da instância
   async function handleCheckStatus() {
     setCheckingStatus(true);
     try {

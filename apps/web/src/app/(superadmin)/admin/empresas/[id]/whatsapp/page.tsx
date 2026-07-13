@@ -4,7 +4,7 @@ import { auth } from '../../../../../../../auth';
 import { WhatsAppProvisionClient } from './whatsapp-provision-client';
 
 export const metadata = {
-  title: 'WhatsApp (Z-API) — Super Admin',
+  title: 'WhatsApp — Super Admin',
 };
 
 export default async function AdminEmpresaWhatsAppPage({
@@ -26,15 +26,15 @@ export default async function AdminEmpresaWhatsAppPage({
           Empresas
         </Link>
         <span>/</span>
-        <span className="text-gray-700">WhatsApp (Z-API)</span>
+        <span className="text-gray-700">WhatsApp</span>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h1 className="text-xl font-heading font-semibold text-gray-900 mb-1">
-          Provisionamento WhatsApp (Z-API)
+          Provisionamento WhatsApp
         </h1>
         <p className="text-sm text-gray-500 mb-6">
-          Vincule a instância Z-API desta empresa. O tenant não tem acesso às credenciais brutas —
+          Vincule a instância WhatsApp desta empresa. O tenant não tem acesso às credenciais brutas —
           ele apenas conecta o aparelho e configura o destino dos alertas.
         </p>
         <WhatsAppProvisionClient empresaId={id} />

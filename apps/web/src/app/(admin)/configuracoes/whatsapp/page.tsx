@@ -14,10 +14,10 @@ export default async function WhatsAppPage() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-6">
           <h1 className="font-heading text-2xl font-bold text-slate-900">
-            Configuração de WhatsApp (Z-API)
+            Configuração de WhatsApp
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Configure alertas WhatsApp via Z-API para envio para números ou grupos.
+            Configure alertas WhatsApp para envio para números ou grupos.
           </p>
         </div>
         <WhatsAppClient />
