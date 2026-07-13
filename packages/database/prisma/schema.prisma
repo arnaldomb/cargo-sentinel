@@ -93,11 +93,11 @@ model ClassificacaoHistorico {
   classificacaoDe   Classificacao?
   classificacaoPara Classificacao
   observacao        String?
-  usuarioId         String
+  usuarioId         String?
   createdAt         DateTime       @default(now())
   placa             Placa          @relation(fields: [placaId], references: [id])
   empresa           Empresa        @relation(fields: [empresaId], references: [id])
-  usuario           User           @relation(fields: [usuarioId], references: [id])
+  usuario           User?          @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
 
   @@index([placaId, createdAt(sort: Desc)])
   @@index([empresaId, createdAt(sort: Desc)])
@@ -216,11 +216,11 @@ model Relatorio {
   garageKey    String?         // preenchido quando PRONTO: reports/{empresaId}/{id}.pdf ou .xlsx
   expiresAt    DateTime?       // now() + 1h ao marcar PRONTO (REPORTS-07)
   erroMsg      String?         // preenchido quando ERRO
-  criadoPor    String          // userId do solicitante
+  criadoPor    String?         // userId do solicitante
   criadoEm    DateTime        @default(now())
   atualizadoEm DateTime       @updatedAt
   empresa      Empresa         @relation(fields: [empresaId], references: [id])
-  usuario      User            @relation("RelatoriosUsuario", fields: [criadoPor], references: [id])
+  usuario      User?           @relation("RelatoriosUsuario", fields: [criadoPor], references: [id], onDelete: SetNull)
 
   @@index([empresaId, criadoEm(sort: Desc)]) // listagem tenant-scoped (REPORTS-01)
   @@index([criadoPor, criadoEm(sort: Desc)]) // filtrar por usuário
