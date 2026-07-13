@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, X, Save, Loader2, KeyRound, Power, User } from 'lucide-react';
+import { Plus, X, Save, Loader2, KeyRound, Power, User, Pencil, Trash2 } from 'lucide-react';
 
 type Role = 'SUPER_ADMIN' | 'ADMIN_EMPRESA' | 'OPERADOR';
 
@@ -37,6 +37,13 @@ export function UsuariosTab({ empresaId }: { empresaId: string }) {
 
   const [resetando, setResetando] = useState<Usuario | null>(null);
   const [novaSenha, setNovaSenha] = useState('');
+
+  const [editandoUsuario, setEditandoUsuario] = useState<Usuario | null>(null);
+  const [formEdicao, setFormEdicao] = useState({ nome: '', email: '' });
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  const [erroEdicao, setErroEdicao] = useState('');
+
+  const [excluindoUsuario, setExcluindoUsuario] = useState<string | null>(null);
 
   const proxyBase = `/api/admin-usuarios-proxy/${empresaId}`;
 
@@ -119,6 +126,46 @@ export function UsuariosTab({ empresaId }: { empresaId: string }) {
       setErroUsuario(String(err instanceof Error ? err.message : err));
     } finally {
       setSalvandoUsuario(false);
+    }
+  }
+
+  async function salvarEdicaoUsuario(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editandoUsuario) return;
+    setSalvandoEdicao(true);
+    setErroEdicao('');
+    try {
+      const res = await fetch(`${proxyBase}/${editandoUsuario.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formEdicao),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(body?.error ?? `Erro ${res.status}`);
+      }
+      setEditandoUsuario(null);
+      await loadUsuarios();
+    } catch (err) {
+      setErroEdicao(String(err instanceof Error ? err.message : err));
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  }
+
+  async function excluirUsuario(u: Usuario) {
+    if (!window.confirm('Excluir este usuário? Esta ação não pode ser desfeita.')) return;
+    setExcluindoUsuario(u.id);
+    try {
+      const res = await fetch(`${proxyBase}/${u.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        alert(body?.error ?? `Erro ${res.status}`);
+        return;
+      }
+      await loadUsuarios();
+    } finally {
+      setExcluindoUsuario(null);
     }
   }
 
@@ -228,6 +275,33 @@ export function UsuariosTab({ empresaId }: { empresaId: string }) {
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : (
                               <Power className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        )}
+                        {u.role !== 'SUPER_ADMIN' && (
+                          <button
+                            onClick={() => {
+                              setEditandoUsuario(u);
+                              setFormEdicao({ nome: u.nome, email: u.email });
+                              setErroEdicao('');
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-ggtech-blue transition-colors"
+                            title="Editar nome/email"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        {u.role !== 'SUPER_ADMIN' && (
+                          <button
+                            onClick={() => excluirUsuario(u)}
+                            disabled={excluindoUsuario === u.id}
+                            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                            title="Excluir usuário"
+                          >
+                            {excluindoUsuario === u.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
                             )}
                           </button>
                         )}
@@ -386,6 +460,73 @@ export function UsuariosTab({ empresaId }: { empresaId: string }) {
                     <KeyRound className="h-4 w-4" />
                   )}
                   {salvandoUsuario ? 'Salvando...' : 'Definir nova senha'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editandoUsuario && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+              <h2 className="font-heading font-semibold text-gray-800">
+                Editar usuário — {editandoUsuario.nome}
+              </h2>
+              <button
+                onClick={() => setEditandoUsuario(null)}
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-400"
+                disabled={salvandoEdicao}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={salvarEdicaoUsuario} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Nome *</label>
+                <input
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm"
+                  required
+                  value={formEdicao.nome}
+                  onChange={(e) => setFormEdicao((f) => ({ ...f, nome: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Email *</label>
+                <input
+                  type="email"
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm"
+                  required
+                  value={formEdicao.email}
+                  onChange={(e) => setFormEdicao((f) => ({ ...f, email: e.target.value }))}
+                />
+              </div>
+              {erroEdicao && (
+                <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">
+                  {erroEdicao}
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditandoUsuario(null)}
+                  disabled={salvandoEdicao}
+                  className="flex-1 px-4 py-2 rounded-md text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={salvandoEdicao}
+                  className="flex-1 bg-ggtech-blue text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {salvandoEdicao ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  {salvandoEdicao ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
             </form>
