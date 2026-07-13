@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import { prisma } from '@cargo-sentinel/database';
 import { createRedisConnection } from '../services/redis';
-import { sendWhatsAppText, zapiConfigFrom } from '../infra/zapi/zapi.service';
+import { sendWhatsAppText, sendWhatsAppImage, zapiConfigFrom } from '../infra/zapi/zapi.service';
 
 export type CrossSiteAlertPayload = {
   empresaId: string;
@@ -23,6 +23,8 @@ export type WhatsAppAlertPayload = {
   obraDetectadaNome: string;
   obraClassificacaoNome: string;
   timestamp: string;
+  /** Data URI base64 (data:image/jpeg;base64,...) da foto do evento, se disponível. */
+  fotoBase64?: string;
 };
 
 export type AlertJobData =
@@ -170,7 +172,11 @@ export async function processAlertJob(
     // Envia para número individual, se configurado
     if (configWhatsApp.whatsappDestino) {
       try {
-        await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappDestino, mensagem);
+        if (payload.fotoBase64) {
+          await sendWhatsAppImage(zapiCfg, configWhatsApp.whatsappDestino, payload.fotoBase64, mensagem);
+        } else {
+          await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappDestino, mensagem);
+        }
         console.log(
           `[alert-worker] WhatsApp (Z-API) enviado para número ${configWhatsApp.whatsappDestino}`,
         );
@@ -184,7 +190,11 @@ export async function processAlertJob(
     // Envia para grupo, se configurado
     if (configWhatsApp.whatsappGrupoJid) {
       try {
-        await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappGrupoJid, mensagem);
+        if (payload.fotoBase64) {
+          await sendWhatsAppImage(zapiCfg, configWhatsApp.whatsappGrupoJid, payload.fotoBase64, mensagem);
+        } else {
+          await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappGrupoJid, mensagem);
+        }
         console.log(
           `[alert-worker] WhatsApp (Z-API) enviado para grupo ${configWhatsApp.whatsappGrupoNome}`,
         );

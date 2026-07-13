@@ -146,3 +146,17 @@ export async function sendWhatsAppText(cfg: ZapiConfig, to: string, message: str
     body: JSON.stringify({ phone, message }),
   })
 }
+
+// imageDataUri: data URI base64 (data:image/jpeg;base64,...) ou URL pública da imagem.
+export async function sendWhatsAppImage(
+  cfg: ZapiConfig,
+  to: string,
+  imageDataUri: string,
+  caption?: string,
+): Promise<void> {
+  const phone = resolvePhone(to)
+  await zapiJson(cfg, '/send-image', {
+    method: 'POST',
+    body: JSON.stringify({ phone, image: imageDataUri, caption }),
+  })
+}

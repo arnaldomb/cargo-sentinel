@@ -94,6 +94,7 @@ export async function processLprJob(jobData: LprJobData): Promise<void> {
       obraDetectadaNome: camera.obra.nome,
       obraClassificacaoNome,
       timestamp: new Date(DateTime).toISOString(),
+      fotoBase64: ImageBase64 ? `data:image/jpeg;base64,${ImageBase64}` : undefined,
     };
 
     // Enfileira os dois jobs — alert-worker processa com concorrência 1 (ALERTS-03)
@@ -122,6 +123,7 @@ export async function processLprJob(jobData: LprJobData): Promise<void> {
       obraDetectadaNome: camera.obra.nome,
       obraClassificacaoNome: 'Lista de Suspeitos',
       timestamp: new Date(DateTime).toISOString(),
+      fotoBase64: ImageBase64 ? `data:image/jpeg;base64,${ImageBase64}` : undefined,
     };
     await Promise.all([
       alertQueue.add('alert:cross-site', { type: 'alert:cross-site', payload: crossSitePayload }),

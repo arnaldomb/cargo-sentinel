@@ -14,6 +14,7 @@ vi.mock('@cargo-sentinel/database', () => ({
 // Mock do cliente Z-API
 vi.mock('../infra/zapi/zapi.service', () => ({
   sendWhatsAppText: vi.fn(),
+  sendWhatsAppImage: vi.fn(),
   zapiConfigFrom: vi.fn(),
 }));
 
@@ -260,5 +261,46 @@ describe('processAlertJob — alert:whatsapp', () => {
     ).resolves.not.toThrow();
 
     expect(sendWhatsAppText).toHaveBeenCalledTimes(2);
+  });
+
+  it('sends via sendWhatsAppImage (com caption) quando payload tem fotoBase64', async () => {
+    const { prisma } = await import('@cargo-sentinel/database');
+    const { sendWhatsAppText, sendWhatsAppImage, zapiConfigFrom } = await import('../infra/zapi/zapi.service');
+    const mockRedis = { set: vi.fn().mockResolvedValue('OK') } as any;
+    vi.mocked(prisma.configuracaoWhatsApp.findUnique).mockResolvedValue({
+      ativo: true,
+      whatsappInstStatus: 'CONECTADO',
+      whatsappDestino: '5511111111111',
+      whatsappGrupoJid: 'grupo-123-group',
+      whatsappGrupoNome: 'Grupo Teste',
+      classificacoesAlerta: [],
+    } as any);
+    vi.mocked(zapiConfigFrom).mockReturnValue(zapiCfg);
+    vi.mocked(sendWhatsAppImage).mockResolvedValue(undefined);
+
+    const payloadComFoto: WhatsAppAlertPayload = {
+      ...whatsappPayload,
+      fotoBase64: 'data:image/jpeg;base64,AAAA',
+    };
+
+    await processAlertJob(
+      { type: 'alert:whatsapp', payload: payloadComFoto },
+      { emitCrossSite: mockEmitCrossSite, redis: mockRedis },
+    );
+
+    expect(sendWhatsAppImage).toHaveBeenCalledTimes(2);
+    expect(sendWhatsAppImage).toHaveBeenCalledWith(
+      zapiCfg,
+      '5511111111111',
+      'data:image/jpeg;base64,AAAA',
+      expect.stringContaining('ABC1234'),
+    );
+    expect(sendWhatsAppImage).toHaveBeenCalledWith(
+      zapiCfg,
+      'grupo-123-group',
+      'data:image/jpeg;base64,AAAA',
+      expect.stringContaining('ABC1234'),
+    );
+    expect(sendWhatsAppText).not.toHaveBeenCalled();
   });
 });
