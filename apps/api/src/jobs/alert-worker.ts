@@ -119,44 +119,80 @@ export async function processAlertJob(
       where: { empresaId: payload.empresaId },
     });
 
-    if (configWhatsApp && configWhatsApp.ativo && configWhatsApp.whatsappInstStatus === 'CONECTADO') {
-      const zapiCfg = zapiConfigFrom(configWhatsApp);
-      if (zapiCfg) {
-        // Verifica se a classificação está na lista de alertas (ou lista vazia = todos)
-        const deveEnviarClassificacao =
-          configWhatsApp.classificacoesAlerta.length === 0 ||
-          configWhatsApp.classificacoesAlerta.includes(payload.classificacao);
+    if (!configWhatsApp) {
+      console.log(
+        `[alert-worker] WhatsApp não configurado para empresa ${payload.empresaId} — pulando envio`,
+      );
+      return;
+    }
 
-        if (deveEnviarClassificacao) {
-          // Envia para número individual, se configurado
-          if (configWhatsApp.whatsappDestino) {
-            try {
-              await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappDestino, mensagem);
-              console.log(
-                `[alert-worker] WhatsApp (Z-API) enviado para número ${configWhatsApp.whatsappDestino}`,
-              );
-            } catch (err) {
-              console.error(
-                `[alert-worker] falha ao enviar WhatsApp (Z-API) para ${configWhatsApp.whatsappDestino}:`,
-                err,
-              );
-            }
-          }
-          // Envia para grupo, se configurado
-          if (configWhatsApp.whatsappGrupoJid) {
-            try {
-              await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappGrupoJid, mensagem);
-              console.log(
-                `[alert-worker] WhatsApp (Z-API) enviado para grupo ${configWhatsApp.whatsappGrupoNome}`,
-              );
-            } catch (err) {
-              console.error(
-                `[alert-worker] falha ao enviar WhatsApp (Z-API) para grupo ${configWhatsApp.whatsappGrupoJid}:`,
-                err,
-              );
-            }
-          }
-        }
+    if (!configWhatsApp.ativo) {
+      console.log(
+        `[alert-worker] alertas WhatsApp desativados para empresa ${payload.empresaId} — pulando envio`,
+      );
+      return;
+    }
+
+    if (configWhatsApp.whatsappInstStatus !== 'CONECTADO') {
+      console.log(
+        `[alert-worker] instância WhatsApp não conectada (status=${configWhatsApp.whatsappInstStatus}) para empresa ${payload.empresaId} — pulando envio da placa ${payload.placaNumero}`,
+      );
+      return;
+    }
+
+    const zapiCfg = zapiConfigFrom(configWhatsApp);
+    if (!zapiCfg) {
+      console.log(
+        `[alert-worker] credenciais Z-API ausentes para empresa ${payload.empresaId} — pulando envio`,
+      );
+      return;
+    }
+
+    // Verifica se a classificação está na lista de alertas (ou lista vazia = todos)
+    const deveEnviarClassificacao =
+      configWhatsApp.classificacoesAlerta.length === 0 ||
+      configWhatsApp.classificacoesAlerta.includes(payload.classificacao);
+
+    if (!deveEnviarClassificacao) {
+      console.log(
+        `[alert-worker] classificação ${payload.classificacao} fora da lista de alertas configurada para empresa ${payload.empresaId} — pulando envio`,
+      );
+      return;
+    }
+
+    if (!configWhatsApp.whatsappDestino && !configWhatsApp.whatsappGrupoJid) {
+      console.log(
+        `[alert-worker] nenhum destino (número/grupo) configurado para empresa ${payload.empresaId} — pulando envio`,
+      );
+      return;
+    }
+
+    // Envia para número individual, se configurado
+    if (configWhatsApp.whatsappDestino) {
+      try {
+        await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappDestino, mensagem);
+        console.log(
+          `[alert-worker] WhatsApp (Z-API) enviado para número ${configWhatsApp.whatsappDestino}`,
+        );
+      } catch (err) {
+        console.error(
+          `[alert-worker] falha ao enviar WhatsApp (Z-API) para ${configWhatsApp.whatsappDestino}:`,
+          err,
+        );
+      }
+    }
+    // Envia para grupo, se configurado
+    if (configWhatsApp.whatsappGrupoJid) {
+      try {
+        await sendWhatsAppText(zapiCfg, configWhatsApp.whatsappGrupoJid, mensagem);
+        console.log(
+          `[alert-worker] WhatsApp (Z-API) enviado para grupo ${configWhatsApp.whatsappGrupoNome}`,
+        );
+      } catch (err) {
+        console.error(
+          `[alert-worker] falha ao enviar WhatsApp (Z-API) para grupo ${configWhatsApp.whatsappGrupoJid}:`,
+          err,
+        );
       }
     }
   }
