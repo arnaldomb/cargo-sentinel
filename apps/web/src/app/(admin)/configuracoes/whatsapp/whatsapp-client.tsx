@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { resolveApiBaseUrl } from '@/lib/dashboard';
 
 type Classificacao = 'LIBERADO' | 'VISITANTE' | 'ATENCAO' | 'SUSPEITO' | 'CRITICO';
 
@@ -36,14 +35,9 @@ export function WhatsAppClient() {
   const [whatsappGrupoNome, setWhatsappGrupoNome] = useState<string | null>(null);
   const [classificacoesAlerta, setClassificacoesAlerta] = useState<Classificacao[]>(['SUSPEITO', 'CRITICO']);
 
-  const apiBaseUrl =
-    typeof window === 'undefined'
-      ? 'http://localhost:4000'
-      : resolveApiBaseUrl(window.location.hostname, window.location.protocol);
-
   function carregarConfig() {
     setLoading(true);
-    return fetch(`${apiBaseUrl}/api/configuracoes-whatsapp-proxy`, { credentials: 'include' })
+    return fetch('/api/configuracoes-whatsapp-proxy', { credentials: 'include' })
       .then((r) => r.json())
       .then((data: ConfiguracaoWhatsApp) => {
         setConfig(data);
@@ -61,13 +55,13 @@ export function WhatsAppClient() {
   useEffect(() => {
     carregarConfig();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiBaseUrl]);
+  }, []);
 
   // Salvar configuração de envio
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/configuracoes-whatsapp-proxy`, {
+      const res = await fetch('/api/configuracoes-whatsapp-proxy', {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -100,7 +94,7 @@ export function WhatsAppClient() {
   async function handleCheckStatus() {
     setCheckingStatus(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/configuracoes-whatsapp-proxy/status`, {
+      const res = await fetch('/api/configuracoes-whatsapp-proxy/status', {
         credentials: 'include',
       });
       if (!res.ok) {
@@ -123,7 +117,7 @@ export function WhatsAppClient() {
   // Carregar QR code
   async function handleGetQrCode() {
     try {
-      const res = await fetch(`${apiBaseUrl}/api/configuracoes-whatsapp-proxy/qrcode`, {
+      const res = await fetch('/api/configuracoes-whatsapp-proxy/qrcode', {
         credentials: 'include',
       });
       const data = await res.json().catch(() => ({}));
@@ -144,7 +138,7 @@ export function WhatsAppClient() {
   async function handleDisconnect() {
     setDisconnecting(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/configuracoes-whatsapp-proxy/desconectar`, {
+      const res = await fetch('/api/configuracoes-whatsapp-proxy/desconectar', {
         method: 'POST',
         credentials: 'include',
       });
@@ -167,7 +161,7 @@ export function WhatsAppClient() {
   async function handleTestar() {
     setTesting(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/configuracoes-whatsapp-proxy/testar`, {
+      const res = await fetch('/api/configuracoes-whatsapp-proxy/testar', {
         method: 'POST',
         credentials: 'include',
       });
@@ -188,7 +182,7 @@ export function WhatsAppClient() {
   async function handleLoadGrupos() {
     setLoadingGrupos(true);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/configuracoes-whatsapp-proxy/grupos`, {
+      const res = await fetch('/api/configuracoes-whatsapp-proxy/grupos', {
         credentials: 'include',
       });
       if (!res.ok) {
