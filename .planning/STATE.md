@@ -118,6 +118,7 @@ Recent decisions affecting current work:
 | 260712-uc5 | Remover nome Z-API visível na UI de WhatsApp (tenant e superadmin) | 2026-07-13 | fe9418e | [260712-uc5-remover-nome-z-api-vis-vel-na-ui-de-what](./quick/260712-uc5-remover-nome-z-api-vis-vel-na-ui-de-what/) |
 | 260712-udi | Enviar foto do evento junto do alerta WhatsApp via send-image | 2026-07-13 | a4786cb | [260712-udi-enviar-foto-do-evento-junto-do-alerta-wh](./quick/260712-udi-enviar-foto-do-evento-junto-do-alerta-wh/) |
 | 260713-qzz | Corrigir deploy VPS: CI aponta pra docker-compose.vps.yml, healthcheck web, README (compatibilidade com Traefik compartilhado do opencheck) | 2026-07-13 | 93bb047 | [260713-qzz-corrigir-deploy-vps-ci-aponta-pra-docker](./quick/260713-qzz-corrigir-deploy-vps-ci-aponta-pra-docker/) |
+| 260713-rxh | Inverter arquivos compose: docker-compose.yml vira versão sem Traefik (Hostinger Docker Manager não permite escolher arquivo) | 2026-07-13 | 97f9579 | [260713-rxh-inverter-arquivos-compose-docker-compose](./quick/260713-rxh-inverter-arquivos-compose-docker-compose/) |
 
 ## Session Continuity
 
