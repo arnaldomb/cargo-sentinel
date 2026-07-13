@@ -17,3 +17,16 @@ export async function PUT(
   });
   return Response.json(await upstream.json(), { status: upstream.status });
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string; usuarioId: string }> },
+) {
+  const { id, usuarioId } = await params;
+  const cookieStore = await cookies();
+  const upstream = await fetch(`${API_BASE}/api/admin/empresas/${id}/usuarios/${usuarioId}`, {
+    method: 'DELETE',
+    headers: { Cookie: cookieStore.toString() },
+  });
+  return Response.json(await upstream.json(), { status: upstream.status });
+}

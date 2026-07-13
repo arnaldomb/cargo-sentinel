@@ -24,3 +24,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
   return Response.json(await upstream.json(), { status: upstream.status });
 }
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const upstream = await fetch(`${API_BASE}/api/admin/empresas/${id}`, {
+    method: 'DELETE',
+    headers: { Cookie: cookieStore.toString() },
+  });
+  return Response.json(await upstream.json(), { status: upstream.status });
+}
