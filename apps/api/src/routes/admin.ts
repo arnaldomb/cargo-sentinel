@@ -226,6 +226,37 @@ router.patch('/empresas/:id', async (req, res) => {
 });
 
 // ============================================================
+// DELETE /api/admin/empresas/:id
+// Exclui a empresa em cascata (obras, câmeras, eventos, placas,
+// histórico, usuários, config WhatsApp, relatórios).
+// SADMIN-EMPRESA-DELETE — decisão locked: sempre cascata, com
+// confirmação de nome exato feita no client.
+// ============================================================
+router.delete('/empresas/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const empresa = await prisma.empresa.findUnique({ where: { id } });
+  if (!empresa) {
+    res.status(404).json({ error: 'Empresa não encontrada' });
+    return;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.classificacaoHistorico.deleteMany({ where: { empresaId: id } });
+    await tx.relatorio.deleteMany({ where: { empresaId: id } });
+    await tx.evento.deleteMany({ where: { empresaId: id } });
+    await tx.placa.deleteMany({ where: { empresaId: id } });
+    await tx.configuracaoWhatsApp.deleteMany({ where: { empresaId: id } });
+    await tx.camera.deleteMany({ where: { empresaId: id } });
+    await tx.obra.deleteMany({ where: { empresaId: id } });
+    await tx.user.deleteMany({ where: { empresaId: id } });
+    await tx.empresa.delete({ where: { id } });
+  });
+
+  res.json({ success: true });
+});
+
+// ============================================================
 // PATCH /api/admin/empresas/:id/status
 // Alterna status entre ATIVO e SUSPENSO.
 // SADMIN-03
@@ -420,8 +451,9 @@ router.post('/empresas/:id/usuarios', async (req, res) => {
 // ============================================================
 router.put('/empresas/:id/usuarios/:usuarioId', async (req, res) => {
   const { id, usuarioId } = req.params;
-  const { nome, role, ativo } = req.body as {
+  const { nome, email, role, ativo } = req.body as {
     nome?: unknown;
+    email?: unknown;
     role?: unknown;
     ativo?: unknown;
   };
@@ -436,7 +468,7 @@ router.put('/empresas/:id/usuarios/:usuarioId', async (req, res) => {
     return;
   }
 
-  const data: { nome?: string; role?: 'ADMIN_EMPRESA' | 'OPERADOR'; ativo?: boolean } = {};
+  const data: { nome?: string; email?: string; role?: 'ADMIN_EMPRESA' | 'OPERADOR'; ativo?: boolean } = {};
 
   if (nome !== undefined) {
     if (typeof nome !== 'string' || nome.trim().length < 2) {
@@ -444,6 +476,13 @@ router.put('/empresas/:id/usuarios/:usuarioId', async (req, res) => {
       return;
     }
     data.nome = nome.trim();
+  }
+  if (email !== undefined) {
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ error: 'email inválido' });
+      return;
+    }
+    data.email = email.toLowerCase();
   }
   if (role !== undefined) {
     if (role !== 'ADMIN_EMPRESA' && role !== 'OPERADOR') {
@@ -460,20 +499,57 @@ router.put('/empresas/:id/usuarios/:usuarioId', async (req, res) => {
     data.ativo = ativo;
   }
 
-  const user = await prisma.user.update({
-    where: { id: usuarioId },
-    data,
-    select: {
-      id: true,
-      nome: true,
-      email: true,
-      role: true,
-      ativo: true,
-      createdAt: true,
-    },
-  });
+  try {
+    const user = await prisma.user.update({
+      where: { id: usuarioId },
+      data,
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        role: true,
+        ativo: true,
+        createdAt: true,
+      },
+    });
 
-  res.json(user);
+    res.json(user);
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      (err as { code: string }).code === 'P2002'
+    ) {
+      res.status(409).json({ error: 'E-mail já cadastrado' });
+      return;
+    }
+    throw err;
+  }
+});
+
+// ============================================================
+// DELETE /api/admin/empresas/:id/usuarios/:usuarioId
+// Exclui um usuário da empresa. Sempre permitido, mesmo com
+// histórico de classificação/relatórios (onDelete: SetNull).
+// SADMIN-USUARIOS-DELETE — nunca permite excluir SUPER_ADMIN
+// ============================================================
+router.delete('/empresas/:id/usuarios/:usuarioId', async (req, res) => {
+  const { id, usuarioId } = req.params;
+
+  const target = await prisma.user.findFirst({ where: { id: usuarioId, empresaId: id } });
+  if (!target) {
+    res.status(404).json({ error: 'Usuário não encontrado' });
+    return;
+  }
+  if (target.role === 'SUPER_ADMIN') {
+    res.status(403).json({ error: 'Não é permitido excluir um SUPER_ADMIN' });
+    return;
+  }
+
+  await prisma.user.delete({ where: { id: usuarioId } });
+
+  res.json({ success: true });
 });
 
 // ============================================================
