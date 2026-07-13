@@ -22,6 +22,7 @@ export function WhatsAppProvisionClient({ empresaId }: { empresaId: string }) {
   const [erro, setErro] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [form, setForm] = useState({ instanceId: '', token: '', clientToken: '' });
+  const [editando, setEditando] = useState(false);
 
   const proxyBase = `/api/admin-whatsapp-proxy/${empresaId}`;
 
@@ -64,6 +65,7 @@ export function WhatsAppProvisionClient({ empresaId }: { empresaId: string }) {
       }
       setOk('Instância vinculada com sucesso!');
       setForm({ instanceId: '', token: '', clientToken: '' });
+      setEditando(false);
       await carregar();
     } catch {
       setErro('Erro de rede ao vincular instância.');
@@ -121,7 +123,7 @@ export function WhatsAppProvisionClient({ empresaId }: { empresaId: string }) {
 
   return (
     <div className="space-y-4">
-      {wpp?.vinculada ? (
+      {wpp?.vinculada && !editando ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-gray-100">
             <div className="flex items-center gap-2">
@@ -169,6 +171,18 @@ export function WhatsAppProvisionClient({ empresaId }: { empresaId: string }) {
               </button>
             )}
             <button
+              onClick={() => {
+                setForm({ instanceId: wpp.instanceId, token: '', clientToken: '' });
+                setErro(null);
+                setOk(null);
+                setEditando(true);
+              }}
+              className="flex items-center gap-2 text-sm text-ggtech-blue border border-ggtech-blue/30 rounded-lg px-3 py-2 hover:bg-ggtech-blue/5"
+            >
+              <Save className="h-4 w-4" />
+              Editar credenciais
+            </button>
+            <button
               onClick={removerWhatsapp}
               disabled={removendo}
               className="flex items-center gap-2 text-sm text-red-500 hover:bg-red-50 rounded-lg px-3 py-2 disabled:opacity-50"
@@ -182,12 +196,21 @@ export function WhatsAppProvisionClient({ empresaId }: { empresaId: string }) {
         <form onSubmit={salvarWhatsapp} className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
             <MessageCircle className="h-4 w-4 text-green-600" />
-            <h3 className="font-heading font-semibold text-gray-800">Vincular instância Z-API</h3>
+            <h3 className="font-heading font-semibold text-gray-800">
+              {editando ? 'Editar credenciais Z-API' : 'Vincular instância Z-API'}
+            </h3>
           </div>
-          <p className="text-sm text-gray-500">
-            Crie a instância no painel Z-API e cole aqui o <strong>ID</strong> e o <strong>Token</strong> da instância.
-            As credenciais são validadas na Z-API antes de salvar.
-          </p>
+          {editando ? (
+            <p className="text-sm text-gray-500">
+              As credenciais serão revalidadas na Z-API ao salvar. Por segurança, informe novamente o{' '}
+              <strong>Token</strong> completo (e o Client-Token, se aplicável) — eles não são pré-preenchidos.
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">
+              Crie a instância no painel Z-API e cole aqui o <strong>ID</strong> e o <strong>Token</strong> da instância.
+              As credenciais são validadas na Z-API antes de salvar.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">ID da instância *</label>
             <input
@@ -217,14 +240,30 @@ export function WhatsAppProvisionClient({ empresaId }: { empresaId: string }) {
               placeholder="Opcional — usa o global do servidor se vazio"
             />
           </div>
-          <button
-            type="submit"
-            disabled={salvando}
-            className="flex items-center gap-2 rounded-lg bg-ggtech-blue px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-          >
-            {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {salvando ? 'Validando na Z-API...' : 'Vincular instância'}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              disabled={salvando}
+              className="flex items-center gap-2 rounded-lg bg-ggtech-blue px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {salvando ? 'Validando na Z-API...' : editando ? 'Salvar credenciais' : 'Vincular instância'}
+            </button>
+            {editando && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditando(false);
+                  setErro(null);
+                  setOk(null);
+                }}
+                disabled={salvando}
+                className="text-sm text-gray-600 hover:text-gray-800 px-3 py-2"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
         </form>
       )}
       {erro && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">{erro}</div>}
