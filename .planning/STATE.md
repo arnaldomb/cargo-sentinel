@@ -112,6 +112,7 @@ Recent decisions affecting current work:
 | 260712-rtv | Corrigir cookie de sessão Auth.js quebrado em dev local via docker (NODE_ENV/AUTH_COOKIE_DOMAIN de produção) | 2026-07-12 | 10fce52 | [260712-rtv-corrigir-cookie-de-sess-o-auth-js-quebra](./quick/260712-rtv-corrigir-cookie-de-sess-o-auth-js-quebra/) |
 | 260712-sft | Completar painel super admin: fix redirect SUPER_ADMIN, shell de abas Geral/Usuários/WhatsApp por empresa, CRUD de usuários | 2026-07-12 | d467812 | [260712-sft-completar-painel-super-admin-fix-redirec](./quick/260712-sft-completar-painel-super-admin-fix-redirec/) |
 | 260712-t48 | Corrigir THUMBNAIL_PROXY_URL de produção vazando para dev local (imagens não carregavam no feed) | 2026-07-12 | 62bab73 | [260712-t48-corrigir-thumbnail-proxy-url-de-produ-o-](./quick/260712-t48-corrigir-thumbnail-proxy-url-de-produ-o-/) |
+| 260712-t5s | Adicionar editar/excluir empresa, usuários e conta WhatsApp no painel super admin | 2026-07-13 | 36a7715 | [260712-t5s-adicionar-editar-excluir-empresa-usu-rio](./quick/260712-t5s-adicionar-editar-excluir-empresa-usu-rio/) |
 
 ## Session Continuity
 
