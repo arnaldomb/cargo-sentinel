@@ -20,7 +20,7 @@ qualquer obra da empresa, o alerta dispara automaticamente.
 | ORM | Prisma | 7.x |
 | Tempo real | Socket.IO | 4.x + Redis adapter |
 | Object storage | Garage | v2.3.0 (substituto do MinIO) |
-| Alertas WhatsApp | Evolution API | **2.3.7 — HARDPINNED, NÃO atualizar para 2.4.0+** |
+| Alertas WhatsApp | Z-API | Instância por empresa, provisionada pelo SUPER_ADMIN |
 | Reverse proxy / TLS | Traefik | v3 |
 | Monorepo | Turborepo + pnpm | — |
 | Cache / pub-sub | Redis | 7.x |
@@ -31,9 +31,13 @@ qualquer obra da empresa, o alerta dispara automaticamente.
 
 O cargo-sentinel roda na mesma VPS de outros projetos (ex: opencheck), atrás de um **Traefik
 compartilhado** já em execução (container `traefik-traefik-1`, `network_mode: host`). Este
-projeto **não sobe Traefik próprio** — `docker-compose.vps.yml` é o arquivo real de produção,
-diferente do `docker-compose.yml` da raiz (que sobe um Traefik standalone e serve só para rodar
-o stack completo isoladamente, ex: em outra VPS/ambiente sem Traefik compartilhado).
+projeto **não sobe Traefik próprio** — `docker-compose.yml` (raiz) é o arquivo real de produção
+(mesmo formato do opencheck), e é o que o Hostinger Docker Manager e o CI usam por padrão, já que
+nenhum dos dois permite escolher outro nome de arquivo.
+
+Para dev local ou para subir o stack isolado (com Traefik próprio, sem depender de um Traefik
+compartilhado já existente), use `docker-compose.local.yml` em vez deste — ver
+[Desenvolvimento Local](#desenvolvimento-local).
 
 ```
 Internet → Cloudflare DNS → VPS
@@ -54,6 +58,11 @@ Internet → Cloudflare DNS → VPS
 - DNS (Cloudflare, registros A → IP da VPS): `portal.ggtronic.com.br`, `lpr.ggtronic.com.br`,
   `storage.sentinel.ggtronic.com.br`
 - Cliente `psql` instalado para o smoke test: `apt install postgresql-client`
+- **Os packages `cargo-sentinel-{api,web,migrate}` no GHCR precisam estar PÚBLICOS**
+  (`github.com/arnaldomb/cargo-sentinel-api` → Package settings → Change visibility → Public;
+  repetir para `-web` e `-migrate`). Sem isso, `docker compose pull` falha com `unauthorized` —
+  diferente de builds locais, nem o Hostinger Docker Manager nem o SSH da CI fazem `docker login`
+  no ghcr.io antes de puxar as imagens.
 
 ---
 
@@ -61,14 +70,18 @@ Internet → Cloudflare DNS → VPS
 
 #### 1. Preparar a pasta na VPS
 
-A VPS **não é um checkout git** — os arquivos de deploy são copiados manualmente:
+**Opção A — Hostinger Docker Manager (git-based):** aponte o projeto para este repositório;
+ele clona e roda `docker compose up` usando o `docker-compose.yml` da raiz automaticamente —
+nenhum passo manual de cópia de arquivo é necessário.
+
+**Opção B — SSH manual (VPS não é um checkout git):**
 
 ```bash
 mkdir -p /docker/cargo-sentinel/garage
 cd /docker/cargo-sentinel
 
-curl -o docker-compose.vps.yml \
-  https://raw.githubusercontent.com/arnaldomb/cargo-sentinel/master/docker-compose.vps.yml
+curl -o docker-compose.yml \
+  https://raw.githubusercontent.com/arnaldomb/cargo-sentinel/master/docker-compose.yml
 curl -o garage/garage.toml \
   https://raw.githubusercontent.com/arnaldomb/cargo-sentinel/master/garage/garage.toml
 ```
@@ -93,15 +106,15 @@ Variáveis obrigatórias:
 | `GARAGE_SERVER_URL` | URL pública HTTPS do Garage | `https://storage.sentinel.ggtronic.com.br` |
 | `ZAPI_CLIENT_TOKEN` | Client-Token global opcional (fallback Z-API) | ver painel Z-API |
 
-> `ACME_EMAIL`/`PUBLIC_DOMAIN` do `.env.example` só se aplicam ao `docker-compose.yml`
-> standalone (dev/ambiente isolado) — **não são usados** por `docker-compose.vps.yml`, já que
-> o TLS é gerenciado pelo Traefik compartilhado.
+> `ACME_EMAIL`/`PUBLIC_DOMAIN` do `.env.example` só se aplicam ao `docker-compose.local.yml`
+> (dev/ambiente isolado) — **não são usados** em produção, já que o TLS é gerenciado pelo
+> Traefik compartilhado.
 
 #### 3. Subida dos serviços
 
 ```bash
-docker compose -f docker-compose.vps.yml pull
-docker compose -f docker-compose.vps.yml up -d
+docker compose pull
+docker compose up -d
 ```
 
 O container `migrate` roda uma vez (`db:push` + `seed`) e sai — isso é esperado.
@@ -111,7 +124,7 @@ O container `migrate` roda uma vez (`db:push` + `seed`) e sai — isso é espera
 #### 4. Verificar status dos serviços
 
 ```bash
-docker compose -f docker-compose.vps.yml ps
+docker compose ps
 docker ps --format "{{.Names}}\t{{.Status}}" | grep cargo-sentinel
 ```
 
@@ -120,8 +133,8 @@ Docker (desabilitado de propósito — ver Troubleshooting) mas deve estar **Up*
 
 ```bash
 # Ver logs em tempo real
-docker compose -f docker-compose.vps.yml logs -f api
-docker compose -f docker-compose.vps.yml logs -f web
+docker compose logs -f api
+docker compose logs -f web
 ```
 
 #### 5. Smoke test de produção
@@ -157,13 +170,14 @@ Saída esperada: **[PASS]** em todas as etapas.
 
 ```bash
 cd /docker/cargo-sentinel
-docker compose -f docker-compose.vps.yml pull
-docker compose -f docker-compose.vps.yml up -d --force-recreate
+docker compose pull
+docker compose up -d --force-recreate
 docker image prune -f
 ```
 
-A CI **não** copia `docker-compose.vps.yml` para a VPS — mudanças no compose (novo serviço,
-nova label, novo volume) exigem repetir o passo 1 manualmente (`curl` do arquivo atualizado).
+A CI **não** copia `docker-compose.yml` para a VPS quando o deploy é via SSH manual — mudanças
+no compose (novo serviço, nova label, novo volume) exigem repetir o passo 1 (Opção B) manualmente.
+Isso não se aplica ao Hostinger Docker Manager (Opção A), que já clona o repositório a cada deploy.
 
 ---
 
@@ -182,24 +196,24 @@ nova label, novo volume) exigem repetir o passo 1 manualmente (`curl` do arquivo
 - Ver logs do Traefik compartilhado: `docker logs traefik-traefik-1`
 
 **API não inicia (exit code 1 imediato):**
-- Verificar variáveis obrigatórias ausentes: `docker compose -f docker-compose.vps.yml logs api | head -20`
+- Verificar variáveis obrigatórias ausentes: `docker compose logs api | head -20`
 - Confirmar que `AUTH_SECRET`, `DATABASE_URL`, `GARAGE_ACCESS_KEY`, `GARAGE_SECRET_KEY`,
   `GARAGE_SERVER_URL` estão preenchidos no `.env`
 
 **Garage não aceita uploads / URLs de imagem quebradas:**
 - `GARAGE_SERVER_URL` deve ser a URL HTTPS pública acessível externamente (não `http://garage:3900`)
 - A chave de acesso deve começar com `GK`
-- Ver logs: `docker compose -f docker-compose.vps.yml logs garage`
+- Ver logs: `docker compose logs garage`
 
 **Alertas WhatsApp não chegam:**
-- Ver `docker compose -f docker-compose.vps.yml logs api | grep alert-worker` — cada skip
+- Ver `docker compose logs api | grep alert-worker` — cada skip
   (instância desconectada, classificação fora do filtro, sem destino) é logado explicitamente
 - Instância Z-API é provisionada pelo SUPER_ADMIN em `/admin/empresas/[id]` (aba WhatsApp), não
   por variável de ambiente
 
 **Smoke test falha na Etapa 3 (evento não encontrado):**
 - Verificar se o seed foi executado (câmera `LPR-SMOKE-01` precisa existir ou ser criada pelo script)
-- Ver logs do worker: `docker compose -f docker-compose.vps.yml logs api | grep -i "bullmq\|worker\|lpr"`
+- Ver logs do worker: `docker compose logs api | grep -i "bullmq\|worker\|lpr"`
 
 ---
 
@@ -214,7 +228,9 @@ cp .env.example .env
 # Editar .env com valores locais (senhas de dev, localhost, etc.)
 
 # Subir serviços de infraestrutura (postgres, redis, garage, traefik dev, migration)
-docker compose up -d
+# Nota: docker-compose.yml da raiz agora é a versão de produção (sem Traefik próprio) —
+# dev local usa docker-compose.local.yml + override, sempre com -f explícito:
+docker compose -f docker-compose.local.yml -f docker-compose.override.yml up -d
 
 # Iniciar servidores de desenvolvimento (Next.js + Express em paralelo via Turborepo)
 pnpm dev
@@ -241,8 +257,8 @@ pnpm --filter @cargo-sentinel/database run db:push
 pnpm --filter @cargo-sentinel/database run seed
 
 # Ver logs dos containers
-docker compose logs -f postgres
-docker compose logs -f redis
+docker compose -f docker-compose.local.yml logs -f postgres
+docker compose -f docker-compose.local.yml logs -f redis
 ```
 
 ---
@@ -252,7 +268,7 @@ docker compose logs -f redis
 - Nunca commitar o arquivo `.env` — ele está no `.gitignore`
 - Rotacionar `AUTH_SECRET` periodicamente (`openssl rand -base64 32`)
 - Credenciais Z-API são por empresa (provisionadas pelo SUPER_ADMIN), nunca em variável de ambiente
-- `traefik/acme.json` (permissão `600`) só se aplica ao `docker-compose.yml` standalone — a VPS
+- `traefik/acme.json` (permissão `600`) só se aplica ao `docker-compose.local.yml` — a VPS
   compartilhada usa TLS do Traefik externo, sem acme.json neste repositório
 - Trocar as senhas do seed (ver tabela acima) antes de colocar em produção
 
