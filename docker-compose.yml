@@ -27,6 +27,34 @@
 #   storage.sentinel.ggtronic.com.br  → garage (3900) — presigned URLs de relatórios
 # ============================================================
 
+# garage.toml embutido como config inline (NÃO bind mount de arquivo) —
+# ferramentas de deploy git-based (ex: Hostinger Docker Manager) só copiam
+# este docker-compose.yml, não o resto do repositório. Um bind mount de
+# ./garage/garage.toml quebra nesse cenário: o arquivo não existe no host
+# no momento do `docker compose up`, e o Docker cria uma PASTA vazia no
+# lugar (erro "IO error: Is a directory" no garage).
+configs:
+  garage_toml:
+    content: |
+      # Garage v2 single-node configuration
+      # Reference: https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/
+      metadata_dir = "/var/lib/garage/meta"
+      data_dir = "/var/lib/garage/data"
+      db_engine = "sqlite"
+      replication_factor = 1
+
+      rpc_bind_addr = "[::]:3901"
+      rpc_public_addr = "127.0.0.1:3901"
+      rpc_secret = "${GARAGE_RPC_SECRET}"
+
+      [s3_api]
+      s3_region = "garage"
+      api_bind_addr = "[::]:3900"
+
+      [admin]
+      api_bind_addr = "[::]:3903"
+      admin_token = "${GARAGE_ADMIN_TOKEN}"
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -70,8 +98,10 @@ services:
       GARAGE_DEFAULT_SECRET_KEY: ${GARAGE_SECRET_KEY}
       GARAGE_DEFAULT_BUCKET: lpr-images
       GARAGE_CONFIG_FILE: /etc/garage.toml
+    configs:
+      - source: garage_toml
+        target: /etc/garage.toml
     volumes:
-      - ./garage/garage.toml:/etc/garage.toml
       - garage-meta:/var/lib/garage/meta
       - garage-data:/var/lib/garage/data
     networks:

@@ -70,6 +70,13 @@ Internet → Cloudflare DNS → VPS
 
 #### 1. Preparar a pasta na VPS
 
+O `garage.toml` é embutido no próprio `docker-compose.yml` via `configs:` inline (Compose
+gera o arquivo dentro do container em runtime, preenchido com `GARAGE_RPC_SECRET`/
+`GARAGE_ADMIN_TOKEN` do `.env`) — **não depende de nenhum arquivo do repositório existir no
+host**. Isso é necessário porque ferramentas de deploy git-based (Hostinger Docker Manager)
+só copiam o `docker-compose.yml`, não o restante do repositório; um bind mount de
+`./garage/garage.toml` quebraria com "IO error: Is a directory" nesse cenário.
+
 **Opção A — Hostinger Docker Manager (git-based):** aponte o projeto para este repositório;
 ele clona e roda `docker compose up` usando o `docker-compose.yml` da raiz automaticamente —
 nenhum passo manual de cópia de arquivo é necessário.
@@ -77,13 +84,11 @@ nenhum passo manual de cópia de arquivo é necessário.
 **Opção B — SSH manual (VPS não é um checkout git):**
 
 ```bash
-mkdir -p /docker/cargo-sentinel/garage
+mkdir -p /docker/cargo-sentinel
 cd /docker/cargo-sentinel
 
 curl -o docker-compose.yml \
   https://raw.githubusercontent.com/arnaldomb/cargo-sentinel/master/docker-compose.yml
-curl -o garage/garage.toml \
-  https://raw.githubusercontent.com/arnaldomb/cargo-sentinel/master/garage/garage.toml
 ```
 
 #### 2. Configurar variáveis de ambiente
@@ -104,6 +109,8 @@ Variáveis obrigatórias:
 | `GARAGE_ACCESS_KEY` | Chave de acesso do Garage (deve começar com `GK`) | `GK$(openssl rand -hex 16)` |
 | `GARAGE_SECRET_KEY` | Chave secreta do Garage | `openssl rand -hex 32` |
 | `GARAGE_SERVER_URL` | URL pública HTTPS do Garage | `https://storage.sentinel.ggtronic.com.br` |
+| `GARAGE_RPC_SECRET` | Segredo RPC interno do Garage (preenche o `garage.toml` embutido) | `openssl rand -hex 32` |
+| `GARAGE_ADMIN_TOKEN` | Token da API admin do Garage (preenche o `garage.toml` embutido) | `openssl rand -base64 32` |
 | `ZAPI_CLIENT_TOKEN` | Client-Token global opcional (fallback Z-API) | ver painel Z-API |
 
 > `ACME_EMAIL`/`PUBLIC_DOMAIN` do `.env.example` só se aplicam ao `docker-compose.local.yml`
