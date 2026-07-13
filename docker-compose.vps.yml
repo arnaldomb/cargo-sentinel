@@ -8,9 +8,10 @@
 #   - Rede externa `proxy` (criar antes: docker network create proxy)
 #
 # Deploy:
-#   /docker/cargo-sentinel/docker-compose.yml  (este arquivo, renomeado)
-#   /docker/cargo-sentinel/.env               (baseado em .env.example)
-#   /docker/cargo-sentinel/garage/garage.toml (copiar do repo)
+#   /docker/cargo-sentinel/docker-compose.vps.yml (este arquivo, mesmo nome —
+#     o workflow de CI já roda `docker compose -f docker-compose.vps.yml ...`)
+#   /docker/cargo-sentinel/.env                   (baseado em .env.example)
+#   /docker/cargo-sentinel/garage/garage.toml     (copiar do repo)
 #
 # DNS (Cloudflare, registros A → 193.203.182.2, SEM tunnel):
 #   portal.ggtronic.com.br            → web  (3000)
@@ -172,6 +173,8 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    healthcheck:
+      disable: true
     networks:
       - internal
       - proxy

@@ -27,35 +27,57 @@ qualquer obra da empresa, o alerta dispara automaticamente.
 
 ---
 
-## Deploy em Produção (Hostinger VPS)
+## Deploy em Produção (VPS compartilhada)
+
+O cargo-sentinel roda na mesma VPS de outros projetos (ex: opencheck), atrás de um **Traefik
+compartilhado** já em execução (container `traefik-traefik-1`, `network_mode: host`). Este
+projeto **não sobe Traefik próprio** — `docker-compose.vps.yml` é o arquivo real de produção,
+diferente do `docker-compose.yml` da raiz (que sobe um Traefik standalone e serve só para rodar
+o stack completo isoladamente, ex: em outra VPS/ambiente sem Traefik compartilhado).
+
+```
+Internet → Cloudflare DNS → VPS
+                               └── Traefik (network_mode: host, porta 80/443, compartilhado)
+                                     ├── portal.ggtronic.com.br              → cargo-sentinel_web:3000
+                                     ├── lpr.ggtronic.com.br                 → cargo-sentinel_api:4000
+                                     └── storage.sentinel.ggtronic.com.br    → cargo-sentinel_garage:3900
+```
 
 ### Pré-requisitos
 
-- VPS Ubuntu 22.04+ com no mínimo 2 vCPUs e 4 GB RAM
-- Docker Engine 24+ e Docker Compose Plugin instalados
+- Traefik compartilhado já rodando na VPS (fora deste repositório)
+- Rede Docker externa `proxy` já criada:
   ```bash
-  curl -fsSL https://get.docker.com | sh
+  docker network create proxy   # só se ainda não existir
+  docker network ls | grep proxy
   ```
-- Domínio apontado para o IP da VPS (registro A configurado no DNS)
-- Portas **80** e **443** abertas no firewall da VPS
+- DNS (Cloudflare, registros A → IP da VPS): `portal.ggtronic.com.br`, `lpr.ggtronic.com.br`,
+  `storage.sentinel.ggtronic.com.br`
 - Cliente `psql` instalado para o smoke test: `apt install postgresql-client`
 
 ---
 
-### Passo a passo
+### Passo a passo (primeiro deploy)
 
-#### 1. Clonar o repositório
+#### 1. Preparar a pasta na VPS
+
+A VPS **não é um checkout git** — os arquivos de deploy são copiados manualmente:
 
 ```bash
-git clone <url-do-repo> cargo-sentinel
-cd cargo-sentinel
+mkdir -p /docker/cargo-sentinel/garage
+cd /docker/cargo-sentinel
+
+curl -o docker-compose.vps.yml \
+  https://raw.githubusercontent.com/arnaldomb/cargo-sentinel/master/docker-compose.vps.yml
+curl -o garage/garage.toml \
+  https://raw.githubusercontent.com/arnaldomb/cargo-sentinel/master/garage/garage.toml
 ```
 
 #### 2. Configurar variáveis de ambiente
 
 ```bash
-cp .env.example .env
-nano .env   # Preencher todos os valores (ver comentários no arquivo)
+cp .env.example .env   # copiar do repo e preencher
+nano .env
 ```
 
 Variáveis obrigatórias:
@@ -63,77 +85,56 @@ Variáveis obrigatórias:
 | Variável | Descrição | Como gerar |
 |----------|-----------|------------|
 | `AUTH_SECRET` | Segredo JWT das sessões | `openssl rand -base64 32` |
-| `PUBLIC_DOMAIN` | Domínio sem `https://` (ex: `app.seudominio.com.br`) | — |
-| `ACME_EMAIL` | Email para certificados Let's Encrypt | — |
-| `POSTGRES_USER` | Usuário do PostgreSQL | ex: `sentinel` |
-| `POSTGRES_PASSWORD` | Senha do banco de dados | `openssl rand -hex 16` |
-| `POSTGRES_DB` | Nome do banco | ex: `cargo_sentinel` |
-| `DATABASE_URL` | URL de conexão completa | ex: `postgresql://sentinel:SENHA@postgres:5432/cargo_sentinel` |
+| `WEB_PUBLIC_URL` | URL pública do portal (Auth.js `AUTH_URL`) | `https://portal.ggtronic.com.br` |
+| `AUTH_COOKIE_DOMAIN` | Domínio-pai do cookie de sessão (com ponto inicial) | `.ggtronic.com.br` |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Credenciais do Postgres | `openssl rand -hex 16` para a senha |
 | `GARAGE_ACCESS_KEY` | Chave de acesso do Garage (deve começar com `GK`) | `GK$(openssl rand -hex 16)` |
 | `GARAGE_SECRET_KEY` | Chave secreta do Garage | `openssl rand -hex 32` |
-| `GARAGE_SERVER_URL` | URL pública HTTPS do Garage | ex: `https://media.seudominio.com.br` |
-| `EVOLUTION_API_KEY` | Chave de autenticação da Evolution API | `openssl rand -hex 32` |
-| `EVOLUTION_INSTANCE_NAME` | Nome da instância WhatsApp | ex: `cargo-sentinel` |
+| `GARAGE_SERVER_URL` | URL pública HTTPS do Garage | `https://storage.sentinel.ggtronic.com.br` |
+| `ZAPI_CLIENT_TOKEN` | Client-Token global opcional (fallback Z-API) | ver painel Z-API |
 
-#### 3. Preparar volumes persistentes
+> `ACME_EMAIL`/`PUBLIC_DOMAIN` do `.env.example` só se aplicam ao `docker-compose.yml`
+> standalone (dev/ambiente isolado) — **não são usados** por `docker-compose.vps.yml`, já que
+> o TLS é gerenciado pelo Traefik compartilhado.
 
-```bash
-# Certificado Let's Encrypt — deve existir antes do primeiro up
-mkdir -p traefik
-touch traefik/acme.json
-chmod 600 traefik/acme.json
-
-# Garage — arquivo de configuração (já incluído no repositório)
-# garage/garage.toml está versionado; revisar se necessário
-ls garage/garage.toml
-```
-
-#### 4. Build e subida dos serviços
+#### 3. Subida dos serviços
 
 ```bash
-# Produção: usa apenas docker-compose.yml (sem override de dev)
-docker compose -f docker-compose.yml build
-
-docker compose -f docker-compose.yml up -d
+docker compose -f docker-compose.vps.yml pull
+docker compose -f docker-compose.vps.yml up -d
 ```
 
-#### 5. Migração do banco e seed inicial
-
-```bash
-# Executar migration + seed uma única vez no primeiro deploy
-docker compose -f docker-compose.yml run --rm api \
-  sh -c "pnpm --filter @cargo-sentinel/database run db:push && pnpm --filter @cargo-sentinel/database run seed"
-```
+O container `migrate` roda uma vez (`db:push` + `seed`) e sai — isso é esperado.
 
 > O seed cria: 1 Super Admin, 1 empresa de demonstração, 1 obra, 1 câmera e usuários de exemplo.
 
-#### 6. Verificar status dos serviços
+#### 4. Verificar status dos serviços
 
 ```bash
-docker compose -f docker-compose.yml ps
+docker compose -f docker-compose.vps.yml ps
+docker ps --format "{{.Names}}\t{{.Status}}" | grep cargo-sentinel
 ```
 
-Todos os serviços devem exibir **Up (healthy)**. O Traefik emite o certificado Let's Encrypt
-automaticamente na primeira requisição HTTPS.
+`postgres`, `redis`, `garage` e `api` devem estar **healthy**; `web` não expõe healthcheck
+Docker (desabilitado de propósito — ver Troubleshooting) mas deve estar **Up**.
 
 ```bash
 # Ver logs em tempo real
-docker compose -f docker-compose.yml logs -f api
-docker compose -f docker-compose.yml logs -f traefik
+docker compose -f docker-compose.vps.yml logs -f api
+docker compose -f docker-compose.vps.yml logs -f web
 ```
 
-#### 7. Smoke test de produção
+#### 5. Smoke test de produção
 
 ```bash
 chmod +x scripts/smoke-test.sh
 
-# Usando domínio de produção
-API_URL="https://app.seudominio.com.br" \
-DB_URL="postgresql://sentinel:SENHA@localhost:5432/cargo_sentinel" \
+API_URL="https://lpr.ggtronic.com.br" \
+DB_URL="postgresql://sentinel:SENHA@localhost:5433/cargo_sentinel" \
 ./scripts/smoke-test.sh
 ```
 
-Saída esperada: **[PASS]** em todas as 4 etapas.
+Saída esperada: **[PASS]** em todas as etapas.
 
 ---
 
@@ -141,57 +142,64 @@ Saída esperada: **[PASS]** em todas as 4 etapas.
 
 | Role | Email | Senha |
 |------|-------|-------|
-| Super Admin | super@sentinel.dev | sentinel123 |
-| Admin Empresa | admin@demo.com | sentinel123 |
-| Operador | operador@demo.com | sentinel123 |
+| Super Admin | superadmin@cargosentinel.com | SuperAdmin123! |
+| Admin Empresa | admin@demo.com | Admin123! |
+| Operador | operador@demo.com | Operador123! |
 
 > **IMPORTANTE: Trocar todas as senhas imediatamente após o primeiro login em produção.**
 
 ---
 
-### Atualização de versão
+### Deploy contínuo (CI/CD)
+
+`.github/workflows/deploy.yml` builda as 3 imagens (`migrate`, `api`, `web`), publica no
+`ghcr.io/arnaldomb/cargo-sentinel-*` e via SSH roda na VPS:
 
 ```bash
-git pull
-
-docker compose -f docker-compose.yml build
-
-docker compose -f docker-compose.yml up -d
-
-# Migrations: rodar manualmente após cada atualização de schema
-docker compose -f docker-compose.yml run --rm api \
-  sh -c "pnpm --filter @cargo-sentinel/database run db:push"
+cd /docker/cargo-sentinel
+docker compose -f docker-compose.vps.yml pull
+docker compose -f docker-compose.vps.yml up -d --force-recreate
+docker image prune -f
 ```
+
+A CI **não** copia `docker-compose.vps.yml` para a VPS — mudanças no compose (novo serviço,
+nova label, novo volume) exigem repetir o passo 1 manualmente (`curl` do arquivo atualizado).
 
 ---
 
 ### Troubleshooting
 
-**Traefik não emite certificado Let's Encrypt:**
-- Verificar que `traefik/acme.json` existe e tem permissão `600`
-- Verificar que o domínio está apontado para o IP da VPS (`dig A app.seudominio.com.br`)
-- Ver logs: `docker compose logs traefik`
+**502 / site não carrega mesmo com containers "Up":**
+- Confirmar que `web`/`api`/`garage` estão na rede `proxy` (`docker network inspect proxy`)
+- Confirmar `HOSTNAME: "0.0.0.0"` no serviço `web` (Next.js standalone bind — sem isso, escuta só
+  no loopback interno do container e o Traefik em host-mode não alcança)
+- O healthcheck Docker do `web` é desabilitado de propósito (`healthcheck: disable: true`) —
+  reabilitá-lo pode fazer o Traefik tratar o container como unhealthy
+
+**Traefik não roteia para um novo serviço:**
+- Verificar labels: `traefik.docker.network=proxy` + `loadbalancer.server.port` (não usar
+  `server.url=http://127.0.0.1:<porta>` — não funciona com Traefik em `network_mode: host`)
+- Ver logs do Traefik compartilhado: `docker logs traefik-traefik-1`
 
 **API não inicia (exit code 1 imediato):**
-- Verificar variáveis obrigatórias ausentes: `docker compose logs api | head -20`
-- Erro "Variáveis de ambiente obrigatórias não configuradas" → revisar `.env`
+- Verificar variáveis obrigatórias ausentes: `docker compose -f docker-compose.vps.yml logs api | head -20`
 - Confirmar que `AUTH_SECRET`, `DATABASE_URL`, `GARAGE_ACCESS_KEY`, `GARAGE_SECRET_KEY`,
-  `GARAGE_SERVER_URL` e `REDIS_URL` estão preenchidos
+  `GARAGE_SERVER_URL` estão preenchidos no `.env`
 
 **Garage não aceita uploads / URLs de imagem quebradas:**
 - `GARAGE_SERVER_URL` deve ser a URL HTTPS pública acessível externamente (não `http://garage:3900`)
 - A chave de acesso deve começar com `GK`
-- Ver logs: `docker compose logs garage`
+- Ver logs: `docker compose -f docker-compose.vps.yml logs garage`
 
-**Evolution API não envia mensagens WhatsApp:**
-- A versão está hardpinned em **2.3.7** — NÃO atualizar para 2.4.0+ (requer licença externa)
-- A instância deve ser criada e o QR code lido no painel da Evolution API antes do primeiro envio
-- Ver logs: `docker compose logs evolution-api`
+**Alertas WhatsApp não chegam:**
+- Ver `docker compose -f docker-compose.vps.yml logs api | grep alert-worker` — cada skip
+  (instância desconectada, classificação fora do filtro, sem destino) é logado explicitamente
+- Instância Z-API é provisionada pelo SUPER_ADMIN em `/admin/empresas/[id]` (aba WhatsApp), não
+  por variável de ambiente
 
 **Smoke test falha na Etapa 3 (evento não encontrado):**
 - Verificar se o seed foi executado (câmera `LPR-SMOKE-01` precisa existir ou ser criada pelo script)
-- Ver logs do worker: `docker compose logs api | grep -i "bullmq\|worker\|lpr"`
-- Confirmar que `REDIS_URL` está correto (worker usa Redis para fila BullMQ)
+- Ver logs do worker: `docker compose -f docker-compose.vps.yml logs api | grep -i "bullmq\|worker\|lpr"`
 
 ---
 
@@ -243,9 +251,10 @@ docker compose logs -f redis
 
 - Nunca commitar o arquivo `.env` — ele está no `.gitignore`
 - Rotacionar `AUTH_SECRET` periodicamente (`openssl rand -base64 32`)
-- Evolution API hardpinned em 2.3.7 — monitorar releases, mas NÃO atualizar para 2.4.0+
-- `traefik/acme.json` deve ter permissão `600` (apenas root lê/escreve)
-- Trocar as senhas do seed (`sentinel123`) antes de colocar em produção
+- Credenciais Z-API são por empresa (provisionadas pelo SUPER_ADMIN), nunca em variável de ambiente
+- `traefik/acme.json` (permissão `600`) só se aplica ao `docker-compose.yml` standalone — a VPS
+  compartilhada usa TLS do Traefik externo, sem acme.json neste repositório
+- Trocar as senhas do seed (ver tabela acima) antes de colocar em produção
 
 ---
 
